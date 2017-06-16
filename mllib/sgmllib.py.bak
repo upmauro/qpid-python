@@ -9,11 +9,8 @@
 # not supported at all.
 
 
-from __future__ import absolute_import
-from __future__ import print_function
 import markupbase
 import re
-from six.moves import range
 
 __all__ = ["SGMLParser"]
 
@@ -373,8 +370,8 @@ class SGMLParser(markupbase.ParserBase):
     # Example -- report an unbalanced </...> tag.
     def report_unbalanced(self, tag):
         if self.verbose:
-            print('*** Unbalanced </' + tag + '>')
-            print('*** Stack:', self.stack)
+            print '*** Unbalanced </' + tag + '>'
+            print '*** Stack:', self.stack
 
     def handle_charref(self, name):
         """Handle character reference, no need to override."""
@@ -399,7 +396,7 @@ class SGMLParser(markupbase.ParserBase):
         tailored by setting up the self.entitydefs mapping appropriately.
         """
         table = self.entitydefs
-        if name in table:
+        if table.has_key(name):
             self.handle_data(table[name])
         else:
             self.unknown_entityref(name)
@@ -436,43 +433,43 @@ class TestSGMLParser(SGMLParser):
 
     def handle_data(self, data):
         self.testdata = self.testdata + data
-        if len(repr(self.testdata)) >= 70:
+        if len(`self.testdata`) >= 70:
             self.flush()
 
     def flush(self):
         data = self.testdata
         if data:
             self.testdata = ""
-            print('data:', repr(data))
+            print 'data:', `data`
 
     def handle_comment(self, data):
         self.flush()
-        r = repr(data)
+        r = `data`
         if len(r) > 68:
             r = r[:32] + '...' + r[-32:]
-        print('comment:', r)
+        print 'comment:', r
 
     def unknown_starttag(self, tag, attrs):
         self.flush()
         if not attrs:
-            print('start tag: <' + tag + '>')
+            print 'start tag: <' + tag + '>'
         else:
-            print('start tag: <' + tag, end=' ')
+            print 'start tag: <' + tag,
             for name, value in attrs:
-                print(name + '=' + '"' + value + '"', end=' ')
-            print('>')
+                print name + '=' + '"' + value + '"',
+            print '>'
 
     def unknown_endtag(self, tag):
         self.flush()
-        print('end tag: </' + tag + '>')
+        print 'end tag: </' + tag + '>'
 
     def unknown_entityref(self, ref):
         self.flush()
-        print('*** unknown entity ref: &' + ref + ';')
+        print '*** unknown entity ref: &' + ref + ';'
 
     def unknown_charref(self, ref):
         self.flush()
-        print('*** unknown char ref: &#' + ref + ';')
+        print '*** unknown char ref: &#' + ref + ';'
 
     def close(self):
         SGMLParser.close(self)
@@ -501,8 +498,8 @@ def test(args = None):
     else:
         try:
             f = open(file, 'r')
-        except IOError as msg:
-            print(file, ":", msg)
+        except IOError, msg:
+            print file, ":", msg
             sys.exit(1)
 
     data = f.read()
