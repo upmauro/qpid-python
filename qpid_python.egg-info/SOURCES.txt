@@ -10,9 +10,7 @@ examples/api/hello_xml
 examples/api/server
 examples/api/spout
 examples/api/statistics.py
-examples/api/statistics.py.bak
 examples/reservations/common.py
-examples/reservations/common.py.bak
 examples/reservations/inventory
 examples/reservations/machine-agent
 examples/reservations/reserve

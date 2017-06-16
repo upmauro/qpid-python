@@ -23,7 +23,8 @@ both SGML and XML.
 """
 
 from __future__ import absolute_import
-import os, dom, transforms, parsers, sys
+import os
+from mllib import dom, transforms, parsers, sys
 import xml.sax, types
 from xml.sax.handler import ErrorHandler
 from xml.sax.xmlreader import InputSource
