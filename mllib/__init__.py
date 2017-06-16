@@ -29,7 +29,7 @@ from mllib import dom, transforms, parsers
 import xml.sax, types
 from xml.sax.handler import ErrorHandler
 from xml.sax.xmlreader import InputSource
-from cStringIO import StringIO
+from io import StringIO
 import six
 
 def transform(node, *args):
