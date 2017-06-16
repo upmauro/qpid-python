@@ -43,7 +43,6 @@ class Codec(Packer):
     bool: direct("boolean"),
     six.text_type: direct("str16"),
     str: map_str,
-    buffer: direct("vbin32"),
     int: direct("int64"),
     int: direct("int64"),
     float: direct("double"),
@@ -178,7 +177,7 @@ class Codec(Packer):
   def read_vbin8(self):
     return self.read(self.read_uint8())
   def write_vbin8(self, b):
-    if isinstance(b, buffer):
+    if isinstance(b, memoryview):
       b = str(b)
     self.write_uint8(len(b))
     self.write(b)
@@ -202,7 +201,7 @@ class Codec(Packer):
   def read_vbin16(self):
     return self.read(self.read_uint16())
   def write_vbin16(self, b):
-    if isinstance(b, buffer):
+    if isinstance(b, memoryview):
       b = str(b)
     self.write_uint16(len(b))
     self.write(b)
@@ -227,7 +226,7 @@ class Codec(Packer):
   def read_vbin32(self):
     return self.read(self.read_uint32())
   def write_vbin32(self, b):
-    if isinstance(b, buffer):
+    if isinstance(b, memoryview):
       b = str(b)
     # Allow unicode values in connection 'response' field
     if isinstance(b, six.text_type):
