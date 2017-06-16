@@ -17,6 +17,7 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 from qpid.datatypes import Message, RangedSet
 from qpid.testlib import TestBase010
 
@@ -69,8 +70,8 @@ class ExampleTest (TestBase010):
         # field that is filled if the reply includes content. In this case the
         # interesting field is the consumer_tag.
         session.message_subscribe(queue="test-queue", destination="consumer_tag")
-        session.message_flow(destination="consumer_tag", unit=session.credit_unit.message, value=0xFFFFFFFFL)
-        session.message_flow(destination="consumer_tag", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
+        session.message_flow(destination="consumer_tag", unit=session.credit_unit.message, value=0xFFFFFFFF)
+        session.message_flow(destination="consumer_tag", unit=session.credit_unit.byte, value=0xFFFFFFFF)
 
         # We can use the session.incoming(...) method to access the messages
         # delivered for our consumer_tag.

@@ -17,10 +17,14 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import datetime, string
-from packer import Packer
-from datatypes import serial, timestamp, RangedSet, Struct, UUID
-from ops import Compound, PRIMITIVE, COMPOUND
+from .packer import Packer
+from .datatypes import serial, timestamp, RangedSet, Struct, UUID
+from .ops import Compound, PRIMITIVE, COMPOUND
+from six.moves import map
+import six
+from six.moves import range
 
 class CodecException(Exception): pass
 
@@ -37,11 +41,11 @@ class Codec(Packer):
 
   ENCODINGS = {
     bool: direct("boolean"),
-    unicode: direct("str16"),
+    six.text_type: direct("str16"),
     str: map_str,
     buffer: direct("vbin32"),
     int: direct("int64"),
-    long: direct("int64"),
+    int: direct("int64"),
     float: direct("double"),
     None.__class__: direct("void"),
     list: direct("list"),
@@ -60,7 +64,7 @@ class Codec(Packer):
     return PRIMITIVE[enc]
 
   def _encoding(self, klass, obj):
-    if self.ENCODINGS.has_key(klass):
+    if klass in self.ENCODINGS:
       return self.ENCODINGS[klass](obj)
     for base in klass.__bases__:
       result = self._encoding(base, obj)
@@ -226,7 +230,7 @@ class Codec(Packer):
     if isinstance(b, buffer):
       b = str(b)
     # Allow unicode values in connection 'response' field
-    if isinstance(b, unicode):
+    if isinstance(b, six.text_type):
       b = b.encode('utf8')
     self.write_uint32(len(b))
     self.write(b)
@@ -257,7 +261,7 @@ class Codec(Packer):
     sc = StringCodec()
     if m is not None:
       sc.write_uint32(len(m))
-      sc.write(string.joinfields(map(self._write_map_elem, m.keys(), m.values()), ""))
+      sc.write(string.joinfields(list(map(self._write_map_elem, list(m.keys()), list(m.values()))), ""))
     self.write_vbin32(sc.encoded)
 
   def read_array(self):
@@ -339,7 +343,7 @@ class Codec(Packer):
     for i in range(len(op.FIELDS)):
       f = op.FIELDS[i]
       if flags & (0x1 << i):
-        if COMPOUND.has_key(f.type):
+        if f.type in COMPOUND:
           value = self.read_compound(COMPOUND[f.type])
         else:
           value = getattr(self, "read_%s" % f.type)()
@@ -360,7 +364,7 @@ class Codec(Packer):
     for i in range(len(op.FIELDS)):
       f = op.FIELDS[i]
       if flags & (0x1 << i):
-        if COMPOUND.has_key(f.type):
+        if f.type in COMPOUND:
           enc = self.write_compound
         else:
           enc = getattr(self, "write_%s" % f.type)

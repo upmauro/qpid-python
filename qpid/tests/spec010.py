@@ -17,6 +17,7 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import os, tempfile, shutil, stat
 from unittest import TestCase
 from qpid.codec010 import Codec, StringCodec
@@ -40,7 +41,7 @@ class SpecTest(TestCase):
     return decoded
 
   def testMessageProperties(self):
-    props = MessageProperties(content_length=3735928559L,
+    props = MessageProperties(content_length=3735928559,
                               reply_to=ReplyTo(exchange="the exchange name",
                                                routing_key="the routing key"))
     dec = self.encdec(props)

@@ -17,8 +17,10 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 from qpid.codec010 import StringCodec
 from qpid.ops import PRIMITIVE
+import six
 
 def codec(name):
   type = PRIMITIVE[name]
@@ -40,8 +42,8 @@ def codec(name):
 TYPE_MAPPINGS={
   dict: "amqp/map",
   list: "amqp/list",
-  unicode: "text/plain; charset=utf8",
-  unicode: "text/plain",
+  six.text_type: "text/plain; charset=utf8",
+  six.text_type: "text/plain",
   buffer: None,
   str: None,
   None.__class__: None

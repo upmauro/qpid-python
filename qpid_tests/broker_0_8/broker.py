@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+from __future__ import absolute_import
 from qpid.client import Closed
 from qpid.queue import Empty
 from qpid.content import Content
@@ -89,7 +90,7 @@ class BrokerTests(TestBase):
         try:
             channel.queue_declare(exclusive=True)
             self.fail("Expected error on queue_declare for invalid channel")
-        except Closed, e:
+        except Closed as e:
             self.assertConnectionException(504, e.args[0])
         
     def test_closed_channel(self):
@@ -99,7 +100,7 @@ class BrokerTests(TestBase):
         try:
             channel.queue_declare(exclusive=True)
             self.fail("Expected error on queue_declare for closed channel")
-        except Closed, e:
+        except Closed as e:
             self.assertConnectionException(504, e.args[0])
 
     def test_channel_flow(self):

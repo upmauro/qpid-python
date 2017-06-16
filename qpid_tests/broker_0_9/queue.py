@@ -16,12 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+from __future__ import absolute_import
 import time
 from qpid.client import Client, Closed
 from qpid.queue import Empty
 from qpid.content import Content
 from qpid.testlib import TestBase
 from qpid.exceptions import Timeout
+from six.moves import range
 
 class QueueTests(TestBase):
     """Tests for 'methods' on the amqp queue 'class'"""
@@ -109,7 +111,7 @@ class QueueTests(TestBase):
         try:
             channel.queue_declare(queue="auto-delete-me", passive=True)
             self.fail("Expected queue to have been deleted")
-        except Closed, e:
+        except Closed as e:
             self.assertChannelException(404, e.args[0])
 
     def test_flow_control(self):
@@ -121,7 +123,7 @@ class QueueTests(TestBase):
         channel.queue_declare(queue=queue_name, arguments={"x-qpid-capacity" : 25, "x-qpid-flow-resume-capacity" : 15})
 
         try:
-            for i in xrange(100):
+            for i in range(100):
                 channel.basic_publish(exchange="", routing_key=queue_name,
                                       content=Content("This is a message with more than 25 bytes. This should trigger flow control."))
                 time.sleep(.1)

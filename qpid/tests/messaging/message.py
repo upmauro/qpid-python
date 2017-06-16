@@ -17,6 +17,7 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 from qpid.tests.messaging.implementation import *
 from qpid.messaging.address import parse
 from qpid.tests.messaging import Base
@@ -179,7 +180,7 @@ class MessageEchoTests(Base):
       self.snd.send(msg)
       self.rcv.fetch(0)
       assert False, "Exception not raised on mismatched content/content_type"
-    except Exception, e:
+    except Exception as e:
       pass
 
   def testRecoverAfterException(self):

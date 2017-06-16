@@ -21,16 +21,18 @@
 # Tests for the testlib itself.
 # 
 
+from __future__ import absolute_import
+from __future__ import print_function
 from qpid.content import Content
 from qpid.testlib import TestBase
-from Queue import Empty
+from six.moves.queue import Empty
 
 import sys
 from traceback import *
 
 def mytrace(frame, event, arg):
     print_stack(frame);
-    print "===="
+    print("====")
     return mytrace
     
 class TestBaseTest(TestBase):

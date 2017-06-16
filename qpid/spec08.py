@@ -29,8 +29,10 @@ class so that the generated code can be reused in a variety of
 situations.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import re, new, mllib, qpid
-from util import fill
+from .util import fill
 
 class SpecContainer:
 
@@ -41,11 +43,11 @@ class SpecContainer:
     self.indexes = {}
 
   def add(self, item):
-    if self.byname.has_key(item.name):
+    if item.name in self.byname:
       raise ValueError("duplicate name: %s" % item)
     if item.id == None:
       item.id = len(self)
-    elif self.byid.has_key(item.id):
+    elif item.id in self.byid:
       raise ValueError("duplicate id: %s" % item)
     self.indexes[item] = len(self.items)
     self.items.append(item)
@@ -72,7 +74,7 @@ class Metadata:
     pass
 
   def __str__(self):
-    args = map(lambda f: "%s=%s" % (f, getattr(self, f)), self.PRINT)
+    args = ["%s=%s" % (f, getattr(self, f)) for f in self.PRINT]
     return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
 
   def __repr__(self):
@@ -100,12 +102,12 @@ class Spec(Metadata):
     self.klass = self.define_class("Amqp%s%s" % (self.major, self.minor))
 
   def method(self, name):
-    if not self.methods.has_key(name):
+    if name not in self.methods:
       for cls in self.classes:
         clen = len(cls.name)
         if name.startswith(cls.name) and name[clen] == "_":
           end = name[clen + 1:]
-          if cls.methods.byname.has_key(end):
+          if end in cls.methods.byname:
             self.methods[name] = cls.methods.byname[end]
     return self.methods.get(name)
 
@@ -225,12 +227,12 @@ class Method(Metadata):
       idx = self.fields.index(f)
       if idx < len(args):
         result.append(args[idx])
-      elif kwargs.has_key(f.name):
+      elif f.name in kwargs:
         result.append(kwargs.pop(f.name))
       else:
         result.append(Method.DEFAULTS[f.type])
     for key, value in kwargs.items():
-      if self.fields.byname.has_key(key):
+      if key in self.fields.byname:
         self._type_error("got multiple values for keyword argument '%s'", key)
       else:
         self._type_error("got an unexpected keyword argument '%s'", key)
@@ -287,7 +289,7 @@ class Method(Metadata):
     if self.content:
       code += ", content"
     code += ")"
-    exec code in g, l
+    exec(code, g, l)
     return l[name]
 
 class Field(Metadata):
@@ -351,7 +353,7 @@ def load_fields(nd, l, domains):
       type = f_nd["@type"]
     type = pythonize(type)
     domain = None
-    while domains.has_key(type) and domains[type].type != type:
+    while type in domains and domains[type].type != type:
       domain = domains[type]
       type = domain.type
     l.add(Field(pythonize(f_nd["@name"]), f_nd.index(), type, domain,
@@ -362,7 +364,7 @@ def load(specfile, *errata):
   spec_root = doc["amqp"]
   spec = Spec(int(spec_root["@major"]), int(spec_root["@minor"]), specfile)
 
-  for root in [spec_root] + map(lambda x: mllib.xml_parse(x)["amqp"], errata):
+  for root in [spec_root] + [mllib.xml_parse(x)["amqp"] for x in errata]:
     # constants
     for nd in root.query["constant"]:
       val = nd["@value"]
@@ -372,7 +374,7 @@ def load(specfile, *errata):
                        get_docs(nd))
       try:
         spec.constants.add(const)
-      except ValueError, e:
+      except ValueError as e:
         pass
         #print "Warning:", e
 
@@ -402,7 +404,7 @@ def load(specfile, *errata):
     # classes
     for c_nd in root.query["class"]:
       cname = pythonize(c_nd["@name"])
-      if spec.classes.byname.has_key(cname):
+      if cname in spec.classes.byname:
         klass = spec.classes.byname[cname]
       else:
         klass = Class(spec, cname, int(c_nd["@index"]), c_nd["@handler"],
@@ -413,7 +415,7 @@ def load(specfile, *errata):
       load_fields(c_nd, klass.fields, spec.domains.byname)
       for m_nd in c_nd.query["method"]:
         mname = pythonize(m_nd["@name"])
-        if klass.methods.byname.has_key(mname):
+        if mname in klass.methods.byname:
           meth = klass.methods.byname[mname]
         else:
           meth = Method(klass, mname,
@@ -501,4 +503,4 @@ def test_summary():
     rows.append('<tr><td colspan="3">%s</td></tr>' % rule.text)
     rows.append('<tr><td colspan="3">&nbsp;</td></tr>')
 
-  print template % "\n".join(rows)
+  print(template % "\n".join(rows))

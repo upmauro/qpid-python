@@ -17,17 +17,19 @@
 # under the License.
 #
 
-import datatypes, session
+from __future__ import absolute_import
+from . import datatypes, session
 from threading import Thread, Condition, RLock
-from util import wait, notify
-from codec010 import StringCodec
-from framing import *
-from session import Session
-from generator import control_invoker
-from exceptions import *
+from .util import wait, notify
+from .codec010 import StringCodec
+from .framing import *
+from .session import Session
+from .generator import control_invoker
+from .exceptions import *
 from logging import getLogger
 import delegates, socket
 import sys
+from six.moves import range
 
 class ChannelBusy(Exception): pass
 
@@ -43,7 +45,7 @@ def client(*args, **kwargs):
 def server(*args, **kwargs):
   return delegates.Server(*args, **kwargs)
 
-from framer import Framer
+from .framer import Framer
 
 class Connection(Framer):
 
@@ -111,8 +113,8 @@ class Connection(Framer):
       self.lock.release()
 
   def __channel(self):
-    for i in xrange(1, self.channel_max):
-      if not self.attached.has_key(i):
+    for i in range(1, self.channel_max):
+      if i not in self.attached:
         return i
     else:
       raise ChannelsBusy()
@@ -182,7 +184,7 @@ class Connection(Framer):
           break
         else:
           continue
-      except socket.error, e:
+      except socket.error as e:
         if self.aborted() or str(e) != "The read operation timed out":
           self.close_code = (None, str(e))
           self.detach_all()
@@ -195,7 +197,7 @@ class Connection(Framer):
       for op in op_dec.read():
         try:
           self.delegate.received(op)
-        except Closed, e:
+        except Closed as e:
           self.close_code = (None, str(e))
           if not self.opened:
             self.failed = True

@@ -16,8 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import os, mllib, cPickle as pickle, sys
-from util import fill
+from __future__ import absolute_import
+from __future__ import print_function
+import os, mllib, six.moves.cPickle as pickle, sys
+from .util import fill
 
 class Primitive(object):
   pass
@@ -26,7 +28,7 @@ class Enum(object):
 
   # XXX: for backwards compatibility
   def values(cls):
-    print >> sys.stderr, "warning, please use .VALUES instead of .values()"
+    print("warning, please use .VALUES instead of .values()", file=sys.stderr)
     return cls.VALUES
   # we can't use the backport preprocessor here because this code gets
   # called by setup.py
@@ -59,7 +61,7 @@ class Compound(object):
                       (self.__class__.__name__, len(self.ARGS),
                        len(self.ARGS) + len(args)))
     if kwargs:
-      raise TypeError("got unexpected keyword argument '%s'" % kwargs.keys()[0])
+      raise TypeError("got unexpected keyword argument '%s'" % list(kwargs.keys())[0])
 
   def fields(self):
     result = {}
@@ -225,8 +227,8 @@ def qualify(nd, field="@name"):
 def resolve(nd, domains):
   candidates = qualify(nd, "@type"), pythonize(nd["@type"])
   for c in candidates:
-    if domains.has_key(c):
-      while domains.has_key(c):
+    if c in domains:
+      while c in domains:
         c = domains[c]
       return c
   else:
@@ -264,7 +266,7 @@ def load_types(file):
       f.close()
   return types
 
-from specs_config import amqp_spec as file
+from .specs_config import amqp_spec as file
 types = load_types(file)
 
 ENUMS = {}

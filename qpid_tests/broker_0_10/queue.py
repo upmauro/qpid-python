@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+from __future__ import absolute_import
 from qpid.client import Client, Closed
 from qpid.queue import Empty
 from qpid.testlib import TestBase010
@@ -49,8 +50,8 @@ class QueueTests(TestBase010):
         #send a further message and consume it, ensuring that the other messages are really gone
         session.message_transfer(message=Message(session.delivery_properties(routing_key="test-queue"), "four"))
         session.message_subscribe(queue="test-queue", destination="tag")
-        session.message_flow(destination="tag", unit=session.credit_unit.message, value=0xFFFFFFFFL)
-        session.message_flow(destination="tag", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
+        session.message_flow(destination="tag", unit=session.credit_unit.message, value=0xFFFFFFFF)
+        session.message_flow(destination="tag", unit=session.credit_unit.byte, value=0xFFFFFFFF)
         queue = session.incoming("tag")
         msg = queue.get(timeout=1)
         self.assertEqual("four", msg.body)
@@ -65,7 +66,7 @@ class QueueTests(TestBase010):
             #queue specified but doesn't exist:
             session.queue_purge(queue="invalid-queue")            
             self.fail("Expected failure when purging non-existent queue")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(404, e.args[0].error_code) #not-found
 
     def test_purge_empty_name(self):        
@@ -78,7 +79,7 @@ class QueueTests(TestBase010):
             #queue not specified and none previously declared for channel:
             session.queue_purge()
             self.fail("Expected failure when purging unspecified queue")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(531, e.args[0].error_code) #illegal-argument
 
     def test_declare_exclusive(self):
@@ -97,7 +98,7 @@ class QueueTests(TestBase010):
             #other connection should not be allowed to declare this:
             s2.queue_declare(queue="exclusive-queue", exclusive=True, auto_delete=True)
             self.fail("Expected second exclusive queue_declare to raise a channel exception")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(405, e.args[0].error_code)
 
         s3 = self.conn.session("subscriber")
@@ -105,7 +106,7 @@ class QueueTests(TestBase010):
             #other connection should not be allowed to declare this:
             s3.message_subscribe(queue="exclusive-queue")
             self.fail("Expected message_subscribe on an exclusive queue to raise a channel exception")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(405, e.args[0].error_code)
 
         s4 = self.conn.session("deleter")
@@ -113,7 +114,7 @@ class QueueTests(TestBase010):
             #other connection should not be allowed to declare this:
             s4.queue_delete(queue="exclusive-queue")
             self.fail("Expected queue_delete on an exclusive queue to raise a channel exception")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(405, e.args[0].error_code)
 
         s5 = self.conn.session("binder")
@@ -121,7 +122,7 @@ class QueueTests(TestBase010):
             #other connection should not be allowed to declare this:
             s5.exchange_bind(exchange="amq.direct", queue="exclusive-queue", binding_key="abc")
             self.fail("Expected exchange_bind on an exclusive queue to raise an exception")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(405, e.args[0].error_code)
 
         s6 = self.conn.session("unbinder")
@@ -129,7 +130,7 @@ class QueueTests(TestBase010):
             #other connection should not be allowed to declare this:
             s6.exchange_unbind(exchange="amq.fanout", queue="exclusive-queue")
             self.fail("Expected exchange_unbind on an exclusive queue to raise an exception")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(405, e.args[0].error_code)
 
     def test_declare_exclusive_alreadyinuse(self):
@@ -148,7 +149,7 @@ class QueueTests(TestBase010):
             #other connection should not be allowed to declare this:
             s2.queue_declare(queue="a-queue", exclusive=True, auto_delete=True)
             self.fail("Expected request for exclusivity to fail")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(405, e.args[0].error_code)
 
     def test_declare_passive(self):
@@ -175,7 +176,7 @@ class QueueTests(TestBase010):
       try:
         s1.queue_declare(queue="passive-queue-not-found", passive=True)
         self.fail("Expected passive declaration of non-existent queue to raise a channel exception")
-      except SessionException, e:
+      except SessionException as e:
         self.assertEquals(404, e.args[0].error_code) #not-found
 
 
@@ -198,7 +199,7 @@ class QueueTests(TestBase010):
         try:
           s2.queue_declare(queue="passive-queue-nonexc", exclusive=True, passive=True)
           self.fail("Expected exclusive passive declaration of existing queue to raise a channel exception")
-        except SessionException, e:
+        except SessionException as e:
           self.assertEquals(405, e.args[0].error_code) # resource locked
 
     def test_bind(self):
@@ -218,7 +219,7 @@ class QueueTests(TestBase010):
         try:
             session.exchange_bind(queue="queue-1", exchange="an-invalid-exchange", binding_key="key1")
             self.fail("Expected bind to non-existant exchange to fail")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(404, e.args[0].error_code)
 
 
@@ -228,7 +229,7 @@ class QueueTests(TestBase010):
         try:
             session.exchange_bind(queue="queue-2", exchange="amq.direct", binding_key="key1")
             self.fail("Expected bind of non-existant queue to fail")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(404, e.args[0].error_code)
 
     def test_unbind_direct(self):
@@ -251,11 +252,11 @@ class QueueTests(TestBase010):
         session.queue_declare(queue="queue-2", exclusive=True, auto_delete=True)
 
         session.message_subscribe(queue="queue-1", destination="queue-1")
-        session.message_flow(destination="queue-1", unit=session.credit_unit.message, value=0xFFFFFFFFL)
-        session.message_flow(destination="queue-1", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
+        session.message_flow(destination="queue-1", unit=session.credit_unit.message, value=0xFFFFFFFF)
+        session.message_flow(destination="queue-1", unit=session.credit_unit.byte, value=0xFFFFFFFF)
         session.message_subscribe(queue="queue-2", destination="queue-2")
-        session.message_flow(destination="queue-2", unit=session.credit_unit.message, value=0xFFFFFFFFL)
-        session.message_flow(destination="queue-2", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
+        session.message_flow(destination="queue-2", unit=session.credit_unit.message, value=0xFFFFFFFF)
+        session.message_flow(destination="queue-2", unit=session.credit_unit.byte, value=0xFFFFFFFF)
 
         queue1 = session.incoming("queue-1")
         queue2 = session.incoming("queue-2")
@@ -312,7 +313,7 @@ class QueueTests(TestBase010):
         try:
             session.queue_declare(queue="delete-me", passive=True)
             self.fail("Queue has not been deleted")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(404, e.args[0].error_code)
 
     def test_delete_queue_exists(self):
@@ -324,7 +325,7 @@ class QueueTests(TestBase010):
         try:
             session.queue_delete(queue="i-dont-exist", if_empty=True)
             self.fail("Expected delete of non-existant queue to fail")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(404, e.args[0].error_code)
 
         
@@ -344,7 +345,7 @@ class QueueTests(TestBase010):
         try:
             session.queue_delete(queue="delete-me-2", if_empty=True)
             self.fail("Expected delete if_empty to fail for non-empty queue")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(406, e.args[0].error_code)
 
         #need new session now:    
@@ -352,8 +353,8 @@ class QueueTests(TestBase010):
 
         #empty queue:
         session.message_subscribe(destination="consumer_tag", queue="delete-me-2")
-        session.message_flow(destination="consumer_tag", unit=session.credit_unit.message, value=0xFFFFFFFFL)
-        session.message_flow(destination="consumer_tag", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
+        session.message_flow(destination="consumer_tag", unit=session.credit_unit.message, value=0xFFFFFFFF)
+        session.message_flow(destination="consumer_tag", unit=session.credit_unit.byte, value=0xFFFFFFFF)
         queue = session.incoming("consumer_tag")
         msg = queue.get(timeout=1)
         self.assertEqual("message", msg.body)
@@ -367,7 +368,7 @@ class QueueTests(TestBase010):
         try:
             session.queue_declare(queue="delete-me-2", passive=True)
             self.fail("Queue has not been deleted")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(404, e.args[0].error_code)
         
     def test_delete_ifunused(self):
@@ -388,7 +389,7 @@ class QueueTests(TestBase010):
         try:
             session2.queue_delete(queue="delete-me-3", if_unused=True)
             self.fail("Expected delete if_unused to fail for queue with existing consumer")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(406, e.args[0].error_code)
 
         session.message_cancel(destination="consumer_tag")    
@@ -397,7 +398,7 @@ class QueueTests(TestBase010):
         try:
             session.queue_declare(queue="delete-me-3", passive=True)
             self.fail("Queue has not been deleted")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(404, e.args[0].error_code)
 
 
@@ -430,7 +431,7 @@ class QueueTests(TestBase010):
         try:
             session.queue_declare(queue="auto-delete-me", passive=True)
             self.fail("Expected queue to have been deleted")
-        except SessionException, e:
+        except SessionException as e:
             self.assertEquals(404, e.args[0].error_code)
 
 

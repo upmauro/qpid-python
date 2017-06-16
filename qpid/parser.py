@@ -17,6 +17,8 @@
 # under the License.
 #
 
+from __future__ import absolute_import
+from six.moves import map
 class ParseError(Exception):
 
   def __init__(self, token, *expected):
@@ -46,9 +48,9 @@ class Parser:
 
   def eat(self, *types):
     if types and not self.matches(*types):
-      raise ParseError(self.next(), *types)
+      raise ParseError(next(self), *types)
     else:
-      t = self.next()
+      t = next(self)
       self.idx += 1
       return t
 

@@ -17,7 +17,9 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import socket
+import six
 
 class SASLError(Exception):
   pass
@@ -29,7 +31,7 @@ class WrapperClient:
 
   def setAttr(self, name, value):
     # Allow unicode user names and passwords
-    if isinstance(value, unicode):
+    if isinstance(value, six.text_type):
       value = value.encode('utf8')
     status = self._cli.setAttr(str(name), str(value))
     if status and name == 'username':

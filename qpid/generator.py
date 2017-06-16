@@ -17,9 +17,11 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import sys
 
-from ops import *
+from .ops import *
+import six
 
 def METHOD(module, op):
   method = lambda self, *args, **kwargs: self.invoke(op, args, kwargs)
@@ -33,15 +35,15 @@ def generate(module, operations):
   dict = {}
 
   for name, enum in ENUMS.items():
-    if isinstance(name, basestring):
+    if isinstance(name, six.string_types):
       dict[name] = enum
 
   for name, op in COMPOUND.items():
-    if isinstance(name, basestring):
+    if isinstance(name, six.string_types):
       dict[name] = METHOD(module, op)
 
   for name, op in operations.items():
-    if isinstance(name, basestring):
+    if isinstance(name, six.string_types):
       dict[name] = METHOD(module, op)
 
   return dict

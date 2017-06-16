@@ -17,8 +17,11 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import threading, struct, datetime, time
-from exceptions import Timeout
+from .exceptions import Timeout
+from six.moves import map
+from six.moves import range
 
 class Struct:
 
@@ -33,10 +36,10 @@ class Struct:
     for field in _type.fields:
       if idx < len(args):
         arg = args[idx]
-        if kwargs.has_key(field.name):
+        if field.name in kwargs:
           raise TypeError("%s() got multiple values for keyword argument '%s'" %
                           (_type.name, field.name))
-      elif kwargs.has_key(field.name):
+      elif field.name in kwargs:
         arg = kwargs.pop(field.name)
       else:
         arg = field.default()
@@ -44,7 +47,7 @@ class Struct:
       idx += 1
 
     if kwargs:
-      unexpected = kwargs.keys()[0]
+      unexpected = list(kwargs.keys())[0]
       raise TypeError("%s() got an unexpected keyword argument '%s'" %
                       (_type.name, unexpected))
 
@@ -110,7 +113,7 @@ class Message:
   def __repr__(self):
     args = []
     if self.headers:
-      args.extend(map(repr, self.headers))
+      args.extend(list(map(repr, self.headers)))
     if self.body:
       args.append(repr(self.body))
     if self.id is not None:
@@ -126,19 +129,19 @@ def serial(o):
 class Serial:
 
   def __init__(self, value):
-    self.value = value & 0xFFFFFFFFL
+    self.value = value & 0xFFFFFFFF
 
   def __hash__(self):
     return hash(self.value)
 
   def __cmp__(self, other):
-    if other.__class__ not in (int, long, Serial):
+    if other.__class__ not in (int, int, Serial):
       return 1
 
     other = serial(other)
 
-    delta = (self.value - other.value) & 0xFFFFFFFFL
-    neg = delta & 0x80000000L
+    delta = (self.value - other.value) & 0xFFFFFFFF
+    neg = delta & 0x80000000
     mag = delta & 0x7FFFFFFF
 
     if neg:
@@ -319,7 +322,7 @@ except ImportError:
   rand = random.Random()
   rand.seed((os.getpid(), time.time(), socket.gethostname()))
   def random_uuid():
-    bytes = [rand.randint(0, 255) for i in xrange(16)]
+    bytes = [rand.randint(0, 255) for i in range(16)]
 
     # From RFC4122, the version bits are set to 0100
     bytes[7] &= 0x0F

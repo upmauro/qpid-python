@@ -24,6 +24,8 @@
 ## This file is being obsoleted by qmf/console.py
 ###############################################################################
 
+from __future__ import absolute_import
+from __future__ import print_function
 import qpid
 import re
 import socket
@@ -34,10 +36,11 @@ import locale
 from qpid.connection import Timeout
 from qpid.management import managementChannel, managementClient
 from threading       import Lock
-from disp            import Display
+from .disp            import Display
 from shlex           import split
 from qpid.connection import Connection
 from qpid.util       import connect
+from six.moves import range
 
 class Broker:
   def __init__ (self, text):
@@ -171,14 +174,14 @@ class ManagementData:
     try:
       line = "Call Result: " + self.methodsPending[sequence] + \
              "  " + str (status) + " (" + sText + ")"
-      print line, args
+      print(line, args)
       del self.methodsPending[sequence]
     finally:
       self.lock.release ()
 
   def closeHandler (self, context, reason):
     if self.operational:
-      print "Connection to broker lost:", reason
+      print("Connection to broker lost:", reason)
     self.operational = False
     if self.cli != None:
       self.cli.setPromptMessage ("Broker Disconnected")
@@ -423,7 +426,7 @@ class ManagementData:
           if token.find ("-") != -1:
             ids = token.split("-", 2)
             for id in range (int (ids[0]), int (ids[1]) + 1):
-              if self.getClassForId (self.rawObjId (long (id))) == classKey:
+              if self.getClassForId (self.rawObjId (int (id))) == classKey:
                 list.append (id)
           else:
             list.append (int(token))
@@ -439,7 +442,7 @@ class ManagementData:
     self.lock.acquire ()
     try:
       rows = []
-      sorted = self.tables.keys ()
+      sorted = list(self.tables.keys ())
       sorted.sort ()
       for name in sorted:
         active  = 0
@@ -458,21 +461,21 @@ class ManagementData:
         self.disp.table ("Management Object Types:",
                          ("ObjectType", "Active", "Deleted"), rows)
       else:
-        print "Waiting for next periodic update"
+        print("Waiting for next periodic update")
     finally:
       self.lock.release ()
 
   def listObjects (self, tokens):
     """ Generate a display of a list of objects in a class """
     if len(tokens) == 0:
-      print "Error - No class name provided"
+      print("Error - No class name provided")
       return
 
     self.lock.acquire ()
     try:
       classKey = self.getClassKey (tokens[0])
       if classKey == None:
-        print ("Object type %s not known" % tokens[0])
+        print(("Object type %s not known" % tokens[0]))
       else:
         rows = []
         if classKey in self.tables:
@@ -506,24 +509,24 @@ class ManagementData:
         classKey  = self.getClassForId (self.rawObjId (rootId))
         remaining = tokens
         if classKey == None:
-          print "Id not known: %d" % int (tokens[0])
+          print("Id not known: %d" % int (tokens[0]))
           raise ValueError ()
       else:
         classKey  = self.getClassKey (tokens[0])
         remaining = tokens[1:]
         if classKey not in self.tables:
-          print "Class not known: %s" % tokens[0]
+          print("Class not known: %s" % tokens[0])
           raise ValueError ()
 
       userIds = self.listOfIds (classKey, remaining)
       if len (userIds) == 0:
-        print "No object IDs supplied"
+        print("No object IDs supplied")
         raise ValueError ()
 
       ids = []
       for id in userIds:
-        if self.getClassForId (self.rawObjId (long (id))) == classKey:
-          ids.append (self.rawObjId (long (id)))
+        if self.getClassForId (self.rawObjId (int (id))) == classKey:
+          ids.append (self.rawObjId (int (id)))
 
       rows = []
       timestamp = None
@@ -567,7 +570,7 @@ class ManagementData:
     self.lock.acquire ()
     try:
       rows = []
-      sorted = self.schema.keys ()
+      sorted = list(self.schema.keys ())
       sorted.sort ()
       for classKey in sorted:
         tuple = self.schema[classKey]
@@ -586,7 +589,7 @@ class ManagementData:
     try:
       classKey = self.getClassKey (className)
       if classKey == None:
-        print ("Class name %s not known" % className)
+        print(("Class name %s not known" % className))
         raise ValueError ()
 
       rows = []
@@ -645,7 +648,7 @@ class ManagementData:
         titles = ("Argument", "Type", "Direction", "Unit", "Notes", "Description")
         self.disp.table (caption, titles, rows)
 
-    except Exception,e:
+    except Exception as e:
       pass
     self.lock.release ()
 
@@ -665,7 +668,7 @@ class ManagementData:
         raise ValueError ()
 
       if methodName not in self.schema[classKey][2]:
-        print "Method '%s' not valid for class '%s'" % (methodName, self.displayClassName(classKey))
+        print("Method '%s' not valid for class '%s'" % (methodName, self.displayClassName(classKey)))
         raise ValueError ()
 
       schemaMethod = self.schema[classKey][2][methodName]
@@ -674,7 +677,7 @@ class ManagementData:
         if schemaMethod[1][arg][2].find("I") != -1:
           count += 1
       if len (args) != count:
-        print "Wrong number of method args: Need %d, Got %d" % (count, len (args))
+        print("Wrong number of method args: Need %d, Got %d" % (count, len (args)))
         raise ValueError ()
 
       namedArgs = {}
@@ -686,7 +689,7 @@ class ManagementData:
 
       self.methodSeq = self.methodSeq + 1
       self.methodsPending[self.methodSeq] = methodName
-    except Exception, e:
+    except Exception as e:
       methodOk = False
     self.lock.release ()
     if methodOk:
@@ -715,7 +718,7 @@ class ManagementData:
   def listIds (self, select):
     rows = []
     if select == 0:
-      sorted = self.idMap.keys()
+      sorted = list(self.idMap.keys())
       sorted.sort()
       for displayId in sorted:
         row = self.makeIdRow (displayId)
@@ -723,7 +726,7 @@ class ManagementData:
     else:
       row = self.makeIdRow (select)
       if row == None:
-        print "Display Id %d not known" % select
+        print("Display Id %d not known" % select)
         return
       rows.append(row)
     self.disp.table("Translation of Display IDs:",
@@ -754,10 +757,10 @@ class ManagementData:
     except:
       tokens = encTokens
     if len (tokens) < 2:
-      print "Not enough arguments supplied"
+      print("Not enough arguments supplied")
       return
     
-    displayId  = long (tokens[0])
+    displayId  = int (tokens[0])
     methodName = tokens[1]
     args       = tokens[2:]
     self.callMethod (displayId, methodName, args)

@@ -17,6 +17,8 @@
 # under the License.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
 import sys, os
 from logging import getLogger
 from unittest import TestCase
@@ -67,8 +69,8 @@ class SelectorTests(TestCase):
         self.assertRaises(InternalError, c.session) # But can't use parent connection
         s.send("child")
         os._exit(0)
-      except Exception, e:
-        print >>sys.stderr, "test child process error: %s" % e
+      except Exception as e:
+        print("test child process error: %s" % e, file=sys.stderr)
         os.exit(1)
       finally:
         os._exit(1)             # Hard exit from child to stop remaining tests running twice

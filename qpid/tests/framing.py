@@ -20,8 +20,11 @@
 # setup, usage, teardown, errors(sync), errors(async), stress, soak,
 # boundary-conditions, config
 
+from __future__ import absolute_import
 from qpid.tests import Test
 from qpid.framing import *
+from six.moves import range
+from six.moves import zip
 
 class Base(Test):
 
@@ -65,7 +68,7 @@ class Base(Test):
     for f in cls.FIELDS:
       v1 = getattr(op1, f.name)
       v2 = getattr(op2, f.name)
-      if COMPOUND.has_key(f.type) or f.type == "struct32":
+      if f.type in COMPOUND or f.type == "struct32":
         self.cmp_ops(v1, v2)
       elif f.type in ("list", "array"):
         self.cmp_list(v1, v2)

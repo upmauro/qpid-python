@@ -17,23 +17,25 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 from unittest import TestCase
 from qpid.datatypes import *
 from qpid.ops import DeliveryProperties, FragmentProperties, MessageProperties
+from six.moves import range
 
 class SerialTest(TestCase):
 
   def test(self):
-    for s in (serial(0), serial(0x8FFFFFFFL), serial(0xFFFFFFFFL)):
+    for s in (serial(0), serial(0x8FFFFFFF), serial(0xFFFFFFFF)):
       assert s + 1 > s
       assert s - 1 < s
       assert s < s + 1
       assert s > s - 1
 
-    assert serial(0xFFFFFFFFL) + 1 == serial(0)
+    assert serial(0xFFFFFFFF) + 1 == serial(0)
 
-    assert min(serial(0xFFFFFFFFL), serial(0x0)) == serial(0xFFFFFFFFL)
-    assert max(serial(0xFFFFFFFFL), serial(0x0)) == serial(0x0)
+    assert min(serial(0xFFFFFFFF), serial(0x0)) == serial(0xFFFFFFFF)
+    assert max(serial(0xFFFFFFFF), serial(0x0)) == serial(0x0)
 
   def testIncr(self):
     s = serial(0)
@@ -43,7 +45,7 @@ class SerialTest(TestCase):
   def testIn(self):
     l = [serial(1), serial(2), serial(3), serial(4)]
     assert serial(1) in l
-    assert serial(0xFFFFFFFFL + 2) in l
+    assert serial(0xFFFFFFFF + 2) in l
     assert 4 in l
 
   def testNone(self):
@@ -60,7 +62,7 @@ class SerialTest(TestCase):
 
   def testSub(self):
     delta = serial(4) - serial(2)
-    assert isinstance(delta, int) or isinstance(delta, long)
+    assert isinstance(delta, int) or isinstance(delta, int)
     assert delta == 2
 
     delta = serial(4) - 2
@@ -210,7 +212,7 @@ class UUIDTest(TestCase):
     # this test is kind of lame, but it does excercise the basic
     # functionality of the class
     u = uuid4()
-    for i in xrange(1024):
+    for i in range(1024):
       assert u != uuid4()
 
 class MessageTest(TestCase):

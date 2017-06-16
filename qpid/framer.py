@@ -17,9 +17,10 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import struct, socket
-from exceptions import Closed
-from packer import Packer
+from .exceptions import Closed
+from .packer import Packer
 from threading import RLock
 from logging import getLogger
 
@@ -53,7 +54,7 @@ class Framer(Packer):
       if self.security_layer_tx:
         try:
           cipher_buf = self.security_layer_tx.encode(self.tx_buf)
-        except SASLError, e:
+        except SASLError as e:
           raise Closed(str(e))
         self._write(cipher_buf)
       else:
@@ -96,14 +97,14 @@ class Framer(Packer):
         if self.security_layer_rx:
           try:
             s = self.security_layer_rx.decode(s)
-          except SASLError, e:
+          except SASLError as e:
             raise Closed(str(e))
       except socket.timeout:
         if self.aborted():
           raise Closed()
         else:
           continue
-      except socket.error, e:
+      except socket.error as e:
         if self.rx_buf != "":
           raise e
         else:

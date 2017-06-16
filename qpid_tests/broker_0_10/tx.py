@@ -16,10 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+from __future__ import absolute_import
 from qpid.client import Client, Closed
 from qpid.queue import Empty
 from qpid.datatypes import Message, RangedSet
 from qpid.testlib import TestBase010
+from six.moves import range
 
 class TxTests(TestBase010):
     """
@@ -251,13 +253,13 @@ class TxTests(TestBase010):
         session = session or self.session
         consumer_tag = keys["destination"]
         session.message_subscribe(**keys)
-        session.message_flow(destination=consumer_tag, unit=session.credit_unit.message, value=0xFFFFFFFFL)
-        session.message_flow(destination=consumer_tag, unit=session.credit_unit.byte, value=0xFFFFFFFFL)
+        session.message_flow(destination=consumer_tag, unit=session.credit_unit.message, value=0xFFFFFFFF)
+        session.message_flow(destination=consumer_tag, unit=session.credit_unit.byte, value=0xFFFFFFFF)
 
     def enable_flow(self, tag, session=None):
         session = session or self.session
-        session.message_flow(destination=tag, unit=session.credit_unit.message, value=0xFFFFFFFFL)
-        session.message_flow(destination=tag, unit=session.credit_unit.byte, value=0xFFFFFFFFL)
+        session.message_flow(destination=tag, unit=session.credit_unit.message, value=0xFFFFFFFF)
+        session.message_flow(destination=tag, unit=session.credit_unit.byte, value=0xFFFFFFFF)
 
     def complete(self, session, msg):
         session.receiver._completed.add(msg.id)#TODO: this may be done automatically

@@ -18,12 +18,14 @@
 #
 
 
+from __future__ import absolute_import
 from qpid.tests import Test
 from qpid.messaging.address import lex, parse, ParseError, EOF, ID, NUMBER, \
     SYM, WSPACE, LEXER
 from qpid.lexer import Token
 from qpid.harness import Skipped
 from qpid.tests.parser import ParserBase
+import six
 
 def indent(st):
   return "  " + st.replace("\n", "\n  ")
@@ -37,7 +39,7 @@ def pprint(o):
     return pprint_map(o)
   elif isinstance(o, list):
     return pprint_list(o)
-  elif isinstance(o, basestring):
+  elif isinstance(o, six.string_types):
     return pprint_string(o)
   else:
     return repr(o)
@@ -83,9 +85,9 @@ class AddressTests(ParserBase, Test):
     try:
       from subprocess import Popen, PIPE, STDOUT
       po = Popen([parser, mode], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-    except ImportError, e:
+    except ImportError as e:
       raise Skipped("%s" % e)
-    except OSError, e:
+    except OSError as e:
       raise Skipped("%s: %s" % (e, parser))
     out, _ = po.communicate(input=input)
     return out

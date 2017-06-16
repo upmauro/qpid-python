@@ -21,12 +21,14 @@
 # Support library for qpid python tests.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
 import string
 import random
 
 import unittest, traceback, socket
 import qpid.client, qmf.console
-import Queue
+import six.moves.queue
 from qpid.content import Content
 from qpid.message import Message
 from qpid.harness import Skipped
@@ -34,6 +36,7 @@ from qpid.exceptions import VersionError
 
 import qpid.messaging
 from qpidtoollibs import BrokerAgent
+from six.moves import range
 
 class TestBase(unittest.TestCase):
     """Base class for Qpid test cases.
@@ -71,8 +74,8 @@ class TestBase(unittest.TestCase):
             for ch, ex in self.exchanges:
                 ch.exchange_delete(exchange=ex)
         except:
-            print "Error on tearDown:"
-            print traceback.print_exc()
+            print("Error on tearDown:")
+            print(traceback.print_exc())
 
         self.client.close()
 
@@ -93,12 +96,12 @@ class TestBase(unittest.TestCase):
         client = qpid.client.Client(host, port)
         try:
           client.start(username = user, password=password, tune_params=tune_params, client_properties=client_properties, channel_options=channel_options)
-        except qpid.client.Closed, e:
+        except qpid.client.Closed as e:
             if isinstance(e.args[0], VersionError):
                 raise Skipped(e.args[0])
             else:
                 raise e
-        except socket.error, e:
+        except socket.error as e:
             raise Skipped(e)
         return client
 
@@ -136,15 +139,15 @@ class TestBase(unittest.TestCase):
         channel = channel or self.channel
         consumer_tag = keys["destination"]
         channel.message_subscribe(**keys)
-        channel.message_flow(destination=consumer_tag, unit=0, value=0xFFFFFFFFL)
-        channel.message_flow(destination=consumer_tag, unit=1, value=0xFFFFFFFFL)
+        channel.message_flow(destination=consumer_tag, unit=0, value=0xFFFFFFFF)
+        channel.message_flow(destination=consumer_tag, unit=1, value=0xFFFFFFFF)
 
     def assertEmpty(self, queue):
         """Assert that the queue is empty"""
         try:
             queue.get(timeout=1)
             self.fail("Queue is not empty.")
-        except Queue.Empty: None              # Ignore
+        except six.moves.queue.Empty: None              # Ignore
 
     def assertPublishGet(self, queue, exchange="", routing_key="", properties=None):
         """
@@ -230,7 +233,7 @@ class TestBase010(unittest.TestCase):
             default_port = self.DEFAULT_PORT
         try:
             sock = connect(host or url.host, port or url.port or default_port)
-        except socket.error, e:
+        except socket.error as e:
             raise Skipped(e)
         if url.scheme == URL.AMQPS:
             sock = ssl(sock)
@@ -238,7 +241,7 @@ class TestBase010(unittest.TestCase):
                           password=url.password or self.DEFAULT_PASSWORD)
         try:
             conn.start(timeout=10)
-        except VersionError, e:
+        except VersionError as e:
             raise Skipped(e)
         return conn
 
@@ -252,5 +255,5 @@ class TestBase010(unittest.TestCase):
         session = session or self.session
         consumer_tag = keys["destination"]
         session.message_subscribe(**keys)
-        session.message_flow(destination=consumer_tag, unit=0, value=0xFFFFFFFFL)
-        session.message_flow(destination=consumer_tag, unit=1, value=0xFFFFFFFFL)
+        session.message_flow(destination=consumer_tag, unit=0, value=0xFFFFFFFF)
+        session.message_flow(destination=consumer_tag, unit=1, value=0xFFFFFFFF)

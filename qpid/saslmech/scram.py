@@ -17,11 +17,14 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 from hmac import HMAC
 from binascii import b2a_hex
-from sasl import Sasl
+from .sasl import Sasl
 import os
 import base64
+from six.moves import range
+from six.moves import zip
 
 class SCRAM_base(Sasl):
 

@@ -16,10 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+from __future__ import absolute_import
 from qpid.client import Client, Closed
 from qpid.queue import Empty
 from qpid.content import Content
 from qpid.testlib import TestBase
+from six.moves import range
 
 class TxTests(TestBase):
     """

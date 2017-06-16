@@ -17,12 +17,13 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import os, connection, session
-from util import notify, get_client_properties_with_defaults
-from datatypes import RangedSet
-from exceptions import VersionError, Closed
+from .util import notify, get_client_properties_with_defaults
+from .datatypes import RangedSet
+from .exceptions import VersionError, Closed
 from logging import getLogger
-from ops import Control
+from .ops import Control
 import sys
 from qpid import sasl
 
@@ -187,7 +188,7 @@ class Client(Delegate):
     initial = None
     try:
       mech, initial = self.sasl.start(mech_list)
-    except Exception, e:
+    except Exception as e:
       raise Closed(str(e))
     ch.connection_start_ok(client_properties=self.client_properties,
                            mechanism=mech, response=initial)
@@ -196,7 +197,7 @@ class Client(Delegate):
     resp = None
     try:
       resp = self.sasl.step(secure.challenge)
-    except Exception, e:
+    except Exception as e:
       raise Closed(str(e))
     ch.connection_secure_ok(response=resp)
 

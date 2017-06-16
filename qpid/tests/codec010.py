@@ -17,6 +17,7 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import time
 
 from unittest import TestCase
@@ -130,4 +131,4 @@ class CodecTest(TestCase):
 
   def testDatetime(self):
     self.check("datetime", timestamp(0))
-    self.check("datetime", timestamp(long(time.time())))
+    self.check("datetime", timestamp(int(time.time())))

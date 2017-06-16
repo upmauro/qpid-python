@@ -21,6 +21,8 @@
 A simple python representation for AMQP content.
 """
 
+from __future__ import absolute_import
+from six.moves import map
 def default(val, defval):
   if val == None:
     return defval

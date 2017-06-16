@@ -17,6 +17,7 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import struct
 
 FIRST_SEG = 0x08
@@ -197,9 +198,9 @@ class SegmentEncoder:
     self.frames = []
     return result
 
-from ops import COMMANDS, CONTROLS, COMPOUND, Header, segment_type, track
+from .ops import COMMANDS, CONTROLS, COMPOUND, Header, segment_type, track
 
-from codec010 import StringCodec
+from .codec010 import StringCodec
 
 class OpEncoder:
 
@@ -208,11 +209,11 @@ class OpEncoder:
 
   def write(self, *ops):
     for op in ops:
-      if COMMANDS.has_key(op.NAME):
+      if op.NAME in COMMANDS:
         seg_type = segment_type.command
         seg_track = track.command
         enc = self.encode_command(op)
-      elif CONTROLS.has_key(op.NAME):
+      elif op.NAME in CONTROLS:
         seg_type = segment_type.control
         seg_track = track.control
         enc = self.encode_compound(op)

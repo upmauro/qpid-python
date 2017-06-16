@@ -23,8 +23,9 @@
 Support for amqp 'reference' content (as opposed to inline content)
 """
 
+from __future__ import absolute_import
 import threading
-from queue import Queue, Closed
+from .queue import Queue, Closed
 
 class NotOpened(Exception): pass
 
@@ -71,7 +72,7 @@ class Reference:
     def next(self):
         try:
             return self.get_chunk()
-        except Closed, e:
+        except Closed as e:
             raise StopIteration
 
     def __iter__(self):

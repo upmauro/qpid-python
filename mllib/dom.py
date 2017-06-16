@@ -25,7 +25,9 @@ from __future__ import division
 from __future__ import generators
 from __future__ import nested_scopes
 
-import transforms
+from __future__ import absolute_import
+from . import transforms
+import six
 
 class Container:
 
@@ -140,7 +142,7 @@ class Tag(Node):
     Node.__init__(self)
     self.name = _name
     self.attrs = list(attrs)
-    self.attrs.extend(kwargs.items())
+    self.attrs.extend(list(kwargs.items()))
     self.singleton = False
 
   def get_attr(self, name):
@@ -177,7 +179,7 @@ class Leaf(Component, Dispatcher):
   base = None
 
   def __init__(self, data):
-    assert isinstance(data, basestring)
+    assert isinstance(data, six.string_types)
     self.data = data
 
 class Data(Leaf):
@@ -238,7 +240,7 @@ class Flatten(View):
     sources = [iter(self.source)]
     while sources:
       try:
-        nd = sources[-1].next()
+        nd = next(sources[-1])
         if isinstance(nd, Tree):
           sources.append(iter(nd.children))
         else:
@@ -267,7 +269,7 @@ class Values(View):
       yield value
 
 def flatten_path(path):
-  if isinstance(path, basestring):
+  if isinstance(path, six.string_types):
     for part in path.split("/"):
       yield part
   elif callable(path):
@@ -290,7 +292,7 @@ class Query(View):
         select = Query
         pred = p
         source = query
-      elif isinstance(p, basestring):
+      elif isinstance(p, six.string_types):
         if p[0] == "@":
           select = Values
           pred = lambda x, n=p[1:]: x[0] == n

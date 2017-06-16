@@ -17,6 +17,8 @@
 # under the License.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
 class Test:
 
   def __init__(self, name):
@@ -43,14 +45,14 @@ import qpid.tests.saslmech.finder
 class TestTestsXXX(Test):
 
   def testFoo(self):
-    print "this test has output"
+    print("this test has output")
 
   def testBar(self):
-    print "this test "*8
-    print "has"*10
-    print "a"*75
-    print "lot of"*10
-    print "output"*10
+    print("this test "*8)
+    print("has"*10)
+    print("a"*75)
+    print("lot of"*10)
+    print("output"*10)
 
   def testQux(self):
     import sys

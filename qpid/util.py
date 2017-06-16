@@ -17,7 +17,9 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 import os, socket, time, textwrap, re, sys
+import six
 
 try:
   from ssl import wrap_socket as ssl
@@ -76,7 +78,7 @@ def connect(host, port):
     try:
       sock.connect(sa)
       break
-    except socket.error, msg:
+    except socket.error as msg:
       sock.close()
   else:
     # If we got here then we couldn't connect (yet)
@@ -191,7 +193,7 @@ class URL:
     return s
 
   def __eq__(self, url):
-    if isinstance(url, basestring):
+    if isinstance(url, six.string_types):
       url = URL(url)
     return \
       self.scheme==url.scheme and \

@@ -16,10 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+from __future__ import absolute_import
 from qpid.client import Client, Closed
 from qpid.queue import Empty
 from qpid.content import Content
 from qpid.testlib import TestBase
+from six.moves import range
 
 class BasicTests(TestBase):
     """Tests for 'methods' on the amqp basic 'class'"""
@@ -64,7 +66,7 @@ class BasicTests(TestBase):
         try:
             channel.basic_consume(consumer_tag="second", queue="test-queue-2")
             self.fail("Expected consume request to fail due to previous exclusive consumer")
-        except Closed, e:
+        except Closed as e:
             self.assertChannelException(403, e.args[0])
 
         #open new channel and cleanup last consumer:    
@@ -76,7 +78,7 @@ class BasicTests(TestBase):
         try:
             channel.basic_consume(consumer_tag="second", queue="test-queue-2", exclusive=True)
             self.fail("Expected exclusive consume request to fail due to previous consumer")
-        except Closed, e:
+        except Closed as e:
             self.assertChannelException(403, e.args[0])
 
     def test_reconnect_to_durable_subscription(self):
@@ -133,7 +135,7 @@ class BasicTests(TestBase):
             #queue specified but doesn't exist:
             channel.basic_consume(queue="invalid-queue")
             self.fail("Expected failure when consuming from non-existent queue")
-        except Closed, e:
+        except Closed as e:
             self.assertChannelException(404, e.args[0])
 
         channel = self.client.channel(2)
@@ -142,7 +144,7 @@ class BasicTests(TestBase):
             #queue not specified and none previously declared for channel:
             channel.basic_consume(queue="")
             self.fail("Expected failure when consuming from unspecified queue")
-        except Closed, e:
+        except Closed as e:
             self.assertConnectionException(530, e.args[0])
 
     def test_consume_unique_consumers(self):
@@ -158,7 +160,7 @@ class BasicTests(TestBase):
         try:
             channel.basic_consume(consumer_tag="first", queue="test-queue-3")
             self.fail("Expected consume request to fail due to non-unique tag")
-        except Closed, e:
+        except Closed as e:
             self.assertConnectionException(530, e.args[0])
 
     def test_cancel(self):

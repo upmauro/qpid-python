@@ -22,16 +22,19 @@ An AMQP client implementation that uses a custom delegate for
 interacting with the server.
 """
 
+from __future__ import absolute_import
 import os, threading
-from peer import Peer, Channel, Closed
-from delegate import Delegate
-from util import get_client_properties_with_defaults
-from connection08 import Connection, Frame, connect
-from spec08 import load
-from queue import Queue
-from reference import ReferenceId, References
-from saslmech.finder import get_sasl_mechanism
-from saslmech.sasl import SaslException
+from .peer import Peer, Channel, Closed
+from .delegate import Delegate
+from .util import get_client_properties_with_defaults
+from .connection08 import Connection, Frame, connect
+from .spec08 import load
+from .queue import Queue
+from .reference import ReferenceId, References
+from .saslmech.finder import get_sasl_mechanism
+from .saslmech.sasl import SaslException
+from six.moves import range
+from six.moves import zip
 
 
 class Client:
@@ -42,7 +45,7 @@ class Client:
     if spec:
       self.spec = spec
     else:
-      from specs_config import amqp_spec_0_9
+      from .specs_config import amqp_spec_0_9
       self.spec = load(amqp_spec_0_9)
     self.structs = StructFactory(self.spec)
     self.sessions = {}
@@ -121,8 +124,8 @@ class Client:
     self.lock.acquire()
     try:
       id = None
-      for i in xrange(1, 64*1024):
-        if not self.sessions.has_key(i):
+      for i in range(1, 64*1024):
+        if i not in self.sessions:
           id = i
           break
     finally:
@@ -184,7 +187,7 @@ class ClientDelegate(Delegate):
     msg.secure_ok(response=self.client.sasl.response(msg.challenge))
 
   def connection_tune(self, ch, msg):
-    tune_params = dict(zip(('channel_max', 'frame_max', 'heartbeat'), (msg.frame.args)))
+    tune_params = dict(list(zip(('channel_max', 'frame_max', 'heartbeat'), (msg.frame.args))))
     if self.client.tune_params:
       tune_params.update(self.client.tune_params)
     msg.tune_ok(**tune_params)
@@ -257,9 +260,9 @@ class StructFactory:
     self.factories = {}
 
   def __getattr__(self, name):
-    if self.factories.has_key(name):
+    if name in self.factories:
       return self.factories[name]
-    elif self.spec.domains.byname.has_key(name):
+    elif name in self.spec.domains.byname:
       f = lambda *args, **kwargs: self.struct(name, *args, **kwargs)
       self.factories[name] = f
       return f

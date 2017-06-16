@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+from __future__ import absolute_import
 from qpid.client import Client, Closed
 from qpid.queue import Empty
 from qpid.content import Content
@@ -23,6 +24,7 @@ from qpid.testlib import TestBase010
 from qpid.session import SessionException
 from qpid.datatypes import uuid4
 from time import sleep
+from six.moves import range
 
 class ExtensionTests(TestBase010):
     """Tests for various extensions to AMQP 0-10"""
@@ -43,7 +45,7 @@ class ExtensionTests(TestBase010):
         try:
             self.session.queue_declare(queue=name, arguments=args)
             self.session.queue_delete(queue=name) # cleanup
-        except SessionException, e:
+        except SessionException as e:
             self.fail("declare with valid policy args failed: %s" % (args))
             self.session = self.conn.session("replacement", 2)
 
@@ -56,7 +58,7 @@ class ExtensionTests(TestBase010):
                 self.session.queue_declare(queue=name, arguments=args)
                 self.session.queue_delete(queue=name) # cleanup
                 self.fail("declare with invalid policy args suceeded: %s (iteration %d)" % (args, i))
-            except SessionException, e:
+            except SessionException as e:
                 self.session = self.conn.session(str(uuid4()))
 
     def test_policy_max_size_as_valid_string(self):

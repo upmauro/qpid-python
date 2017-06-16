@@ -23,12 +23,15 @@ to read and write Frame objects. This could be used by a client,
 server, or even a proxy implementation.
 """
 
+from __future__ import absolute_import
 import socket, codec, errno, qpid
 from cStringIO import StringIO
-from codec import EOF
-from compat import SHUT_RDWR
-from exceptions import VersionError
+from .codec import EOF
+from .compat import SHUT_RDWR
+from .exceptions import VersionError
 from logging import getLogger, DEBUG
+from six.moves import range
+from six.moves import zip
 
 log = getLogger("qpid.connection08")
 
@@ -63,7 +66,7 @@ class SockIO:
     try:
       try:
         self.sock.shutdown(SHUT_RDWR)
-      except socket.error, e:
+      except socket.error as e:
         if (e.errno == errno.ENOTCONN):
           pass
         else:
@@ -131,7 +134,7 @@ def connect(host, port, options = None):
                          certfile=ssl_certfile,
                          ca_certs=ssl_trustfile,
                          cert_reqs=validate)
-    except ImportError, e:
+    except ImportError as e:
       # Python 2.5 and older
       if ssl_verify_hostname:
         log.error("Your version of Python does not support ssl hostname verification. Please upgrade your version of Python.")
@@ -310,10 +313,10 @@ class Frame:
 
     def __new__(cls, name, bases, dict):
       for attr in ("encode", "decode", "type"):
-        if not dict.has_key(attr):
+        if attr not in dict:
           raise TypeError("%s must define %s" % (name, attr))
       dict["decode"] = staticmethod(dict["decode"])
-      if dict.has_key("__init__"):
+      if "__init__" in dict:
         __init__ = dict["__init__"]
         def init(self, *args, **kwargs):
           args = list(args)

@@ -18,6 +18,7 @@
 #
 
 
+from __future__ import absolute_import
 from logging import getLogger
 
 log = getLogger("qpid.saslmech")
@@ -41,7 +42,7 @@ def get_sasl_mechanism(mechanismNames, username, password, namespace="qpid.saslm
         instances.append(instance)
       else:
         log.debug("SASL mechanism %s unavailable as the prerequistes for this mechanism have not been met", mechanismName)
-    except (ImportError, AttributeError), e:
+    except (ImportError, AttributeError) as e:
       # Unknown mechanism - this is normal if the server supports mechanism that the client does not
       log.debug("Could not load implementation for %s", canonicalName)
       pass

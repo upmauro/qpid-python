@@ -21,8 +21,9 @@
 Parsers for SGML and XML to dom.
 """
 
+from __future__ import absolute_import
 import sgmllib, xml.sax.handler
-from dom import *
+from .dom import *
 
 class Parser:
 
@@ -122,7 +123,7 @@ class XMLParser(xml.sax.handler.ContentHandler):
     self.locator = locator
 
   def startElement(self, name, attrs):
-    self.parser.start(name, attrs.items())
+    self.parser.start(name, list(attrs.items()))
     self.line()
 
   def endElement(self, name):

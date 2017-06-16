@@ -17,10 +17,14 @@
 # under the License.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
 from qpid.tests.messaging.implementation import *
 from qpid.tests.messaging import Base
 import math
 import random
+import six
+from six.moves import range
 
 class LVQTests (Base):
     """
@@ -72,7 +76,7 @@ class LVQTests (Base):
             counters[k] += 1
             messages.append(create_message(k, "%s-%i" % (k, counters[k])))
         # make sure we have sent at least one message for every key
-        for k, v in counters.iteritems():
+        for k, v in six.iteritems(counters):
             if v == 0:
                 counters[k] += 1
                 messages.append(create_message(k, "%s-%i" % (k, counters[k])))
@@ -82,7 +86,7 @@ class LVQTests (Base):
 
         rcv = self.ssn.receiver("lvq; {mode: browse}")
         retrieved = fetch_all_as_tuples(rcv)
-        print [v for k, v in retrieved]
+        print([v for k, v in retrieved])
 
         for k, v in retrieved:
             assert v == "%s-%i" % (k, counters[k])

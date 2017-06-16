@@ -16,7 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-from connection08 import Method, Request
+from __future__ import absolute_import
+from .connection08 import Method, Request
 
 class Message:
 
@@ -26,7 +27,7 @@ class Message:
     self.method = frame.method_type
     self.content = content
     if self.method.is_l4_command():
-      self.command_id = self.channel.incoming_completion.sequence.next()
+      self.command_id = next(self.channel.incoming_completion.sequence)
       #print "allocated: ", self.command_id, "to ", self.method.klass.name, "_", self.method.name
 
   def __len__(self):
@@ -43,7 +44,7 @@ class Message:
 
   def __getattr__(self, attr):
     fields = self.method.fields.byname
-    if fields.has_key(attr):
+    if attr in fields:
       f = fields[attr]
       result = self[self.method.fields.index(f)]
     else:
@@ -51,7 +52,7 @@ class Message:
         if attr == r.name:
           def respond(*args, **kwargs):
             batch=0
-            if kwargs.has_key("batchoffset"):
+            if "batchoffset" in kwargs:
               batch=kwargs.pop("batchoffset")
             self.channel.respond(Method(r, r.arguments(*args, **kwargs)), batch, self.frame)
           result = respond

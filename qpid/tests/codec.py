@@ -18,11 +18,14 @@
 # under the License.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
 import unittest
 from qpid.codec import Codec
 from qpid.spec08 import load
 from cStringIO import StringIO
 from qpid.reference import ReferenceId
+from six.moves import range
 
 __doc__ = """
 
@@ -553,7 +556,7 @@ class ResolveTestCase(BaseDataTypes):
     # Test resolving above the max signed 32bit integer value of 2^31 -1
     # As above except use an explicitly cast python long
     def test_resolve_long_above_signed_32bit_max(self):
-        value = 2147483648L #2^31, i.e 1 above the 32bit signed max
+        value = 2147483648 #2^31, i.e 1 above the 32bit signed max
         expected = "signed_long"
         resolved = self.codec.resolve(value.__class__, value)
         self.failUnlessEqual(resolved, expected, "resolve FAILED...expected %s got %s" % (expected, resolved))
@@ -561,7 +564,7 @@ class ResolveTestCase(BaseDataTypes):
     # Test resolving an explicitly cast python long of value 1, i.e less than the max signed 32bit integer value
     # Should be encoded as a 32bit signed int on the wire
     def test_resolve_long_1(self):
-        value = 1L
+        value = 1
         expected = "signed_int"
         resolved = self.codec.resolve(value.__class__, value)
         self.failUnlessEqual(resolved, expected, "resolve FAILED...expected %s got %s" % (expected, resolved))
@@ -585,13 +588,13 @@ class ResolveTestCase(BaseDataTypes):
     # Test resolving a value of 2^63, i.e more than the max a signed 64bit integer value can hold.
     # Should throw an exception indicating the value can't be encoded.
     def test_resolve_above_64bit_signed_max(self):
-        value = 9223372036854775808L #2^63
+        value = 9223372036854775808 #2^63
         self.failUnlessRaises(Exception, self.codec.resolve, value.__class__, value)
     # -------------------
     # Test resolving a value of -2^63 -1, i.e less than the min a signed 64bit integer value can hold.
     # Should throw an exception indicating the value can't be encoded.
     def test_resolve_below_64bit_signed_min(self):
-        value = 9223372036854775808L # -2^63 -1
+        value = 9223372036854775808 # -2^63 -1
         self.failUnlessRaises(Exception, self.codec.resolve, value.__class__, value)
     # -------------------
     # Test resolving a float. Should indicate use of double as python uses 64bit floats
@@ -636,7 +639,7 @@ def test(type, value):
     enc = stream.getvalue()
     stream.reset()
     dup = []
-    for i in xrange(len(values)):
+    for i in range(len(values)):
       dup.append(codec.decode(type))
     if values != dup:
       raise AssertionError("%r --> %r --> %r" % (values, enc, dup))
@@ -656,7 +659,7 @@ def oldtests():
     """
     for value in ("1", "0", "110", "011", "11001", "10101", "10011"):
       for i in range(10):
-        dotest("bit", map(lambda x: x == "1", value*i))
+        dotest("bit", [x == "1" for x in value*i])
 
     for value in ({}, {"asdf": "fdsa", "fdsa": 1, "three": 3}, {"one": 1}):
       dotest("table", value)
@@ -704,25 +707,25 @@ if __name__ == '__main__':
     test_runner = unittest.TextTestRunner(run_output_stream, '', '')
     test_result = test_runner.run(codec_test_suite)
 
-    print '\n%d test run...' % (test_result.testsRun)
+    print('\n%d test run...' % (test_result.testsRun))
 
     if test_result.wasSuccessful():
-        print '\nAll tests successful\n'
+        print('\nAll tests successful\n')
 
     if test_result.failures:
-        print '\n----------'
-        print '%d FAILURES:' % (len(test_result.failures))
-        print '----------\n'
+        print('\n----------')
+        print('%d FAILURES:' % (len(test_result.failures)))
+        print('----------\n')
         for failure in test_result.failures:
-            print str(failure[0]) + ' ... FAIL'
+            print(str(failure[0]) + ' ... FAIL')
 
     if test_result.errors:
-        print '\n---------'
-        print '%d ERRORS:' % (len(test_result.errors))
-        print '---------\n'
+        print('\n---------')
+        print('%d ERRORS:' % (len(test_result.errors)))
+        print('---------\n')
 
         for error in test_result.errors:
-            print str(error[0]) + ' ... ERROR'
+            print(str(error[0]) + ' ... ERROR')
 
     f = open('codec_unit_test_output.txt', 'w')
     f.write(str(run_output_stream.getvalue()))

@@ -17,11 +17,13 @@
 # under the License.
 #
 
+from __future__ import absolute_import
 from qpid.testlib import TestBase
 from qpid.content import Content
 from qpid.harness import Skipped
 
 import qpid.client
+from six.moves import range
 
 class EchoTests(TestBase):
   """Verify that messages can be sent and received retaining fidelity"""

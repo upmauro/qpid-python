@@ -17,10 +17,13 @@
 # under the License.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
 from qpid.tests.messaging.implementation import *
 from qpid.tests.messaging import Base
 from qpidtoollibs import BrokerAgent
 from time import sleep
+from six.moves import range
 
 #
 # Broker tests using the new messaging API
@@ -33,14 +36,14 @@ class GeneralTests(Base):
 
     def assertEqual(self, left, right, text=None):
         if not left == right:
-            print "assertEqual failure: %r != %r" % (left, right)
+            print("assertEqual failure: %r != %r" % (left, right))
             if text:
-                print "  %r" % text
+                print("  %r" % text)
             assert None
 
     def fail(self, text=None):
         if text:
-            print "Fail: %r" % text
+            print("Fail: %r" % text)
         assert None
 
     def setup_connection(self):
@@ -54,7 +57,7 @@ class GeneralTests(Base):
         try:
             ssn.receiver("does-not-exist")
             self.fail("Expected non-existent node to cause NotFound exception")
-        except NotFound, e: None
+        except NotFound as e: None
 
     def test_qpid_3481_acquired_to_alt_exchange(self):
         """
@@ -283,7 +286,7 @@ class SequenceNumberTests(Base):
 
     def fail(self, text=None):
         if text:
-            print "Fail: %r" % text
+            print("Fail: %r" % text)
         assert None
 
     def setup_connection(self):

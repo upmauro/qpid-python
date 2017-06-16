@@ -17,7 +17,9 @@
 # under the License.
 #
 
-import connection
+from __future__ import absolute_import
+from . import connection
+from six.moves import zip
 
 class Struct:
 
@@ -41,11 +43,11 @@ class Struct:
     return field
 
   def exists(self, attr):
-    return self.type.fields.byname.has_key(attr)
+    return attr in self.type.fields.byname
 
   def has(self, attr):
     self._check(attr)
-    return self._values.has_key(attr)
+    return attr in self._values
 
   def set(self, attr, value):
     self._check(attr)

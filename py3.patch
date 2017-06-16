@@ -1,0 +1,5307 @@
+--- ./setup.py	(original)
++++ ./setup.py	(refactored)
+@@ -17,6 +17,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ import os, re, sys, string, platform
+ from distutils.core import setup, Command
+ from distutils.command.build import build as _build
+@@ -39,8 +40,7 @@
+     name, actor = self.actor(src, dst)
+     if actor:
+       if not os.path.isfile(src):
+-        raise DistutilsFileError, \
+-            "can't copy '%s': doesn't exist or not a regular file" % src
++        raise DistutilsFileError("can't copy '%s': doesn't exist or not a regular file" % src)
+ 
+       if os.path.isdir(dst):
+         dir = dst
+@@ -61,22 +61,22 @@
+       else:
+         try:
+           fsrc = open(src, 'rb')
+-        except os.error, (errno, errstr):
+-          raise DistutilsFileError, \
+-              "could not open '%s': %s" % (src, errstr)
++        except os.error as xxx_todo_changeme1:
++          (errno, errstr) = xxx_todo_changeme1.args
++          raise DistutilsFileError("could not open '%s': %s" % (src, errstr))
+ 
+         if os.path.exists(dst):
+           try:
+             os.unlink(dst)
+-          except os.error, (errno, errstr):
+-            raise DistutilsFileError, \
+-                "could not delete '%s': %s" % (dst, errstr)
++          except os.error as xxx_todo_changeme:
++            (errno, errstr) = xxx_todo_changeme.args
++            raise DistutilsFileError("could not delete '%s': %s" % (dst, errstr))
+ 
+         try:
+           fdst = open(dst, 'wb')
+-        except os.error, (errno, errstr):
+-          raise DistutilsFileError, \
+-              "could not create '%s': %s" % (dst, errstr)
++        except os.error as xxx_todo_changeme2:
++          (errno, errstr) = xxx_todo_changeme2.args
++          raise DistutilsFileError("could not create '%s': %s" % (dst, errstr))
+ 
+         try:
+           fdst.write(actor(fsrc.read()))
+@@ -129,7 +129,7 @@
+     try:
+       from epydoc.docbuilder import build_doc_index
+       from epydoc.docwriter.html import HTMLWriter
+-    except ImportError, e:
++    except ImportError as e:
+       log.warn('%s -- skipping build_doc', e)
+       return
+ 
+--- ./examples/api/statistics.py	(original)
++++ ./examples/api/statistics.py	(refactored)
+@@ -18,6 +18,8 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ import time
+ 
+ TS = "ts"
+@@ -110,7 +112,7 @@
+             self.batchCount+=1
+             if self.batchCount == self.batchSize:
+                 self.header()
+-                print self.batch.report()
++                print(self.batch.report())
+                 self.create()
+                 self.batchCount = 0
+ 
+@@ -119,13 +121,13 @@
+         if self.overall == None:
+             self.overall = self.create()
+         self.header()
+-        print self.overall.report()
++        print(self.overall.report())
+ 
+     def header(self):
+         if not self.headerPrinted:
+             if self.overall == None:
+                 self.overall = self.create()
+-            print self.overall.header()
++            print(self.overall.header())
+             self.headerPrinted = True
+ 
+ 
+--- ./examples/reservations/common.py	(original)
++++ ./examples/reservations/common.py	(refactored)
+@@ -18,6 +18,8 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ import traceback
+ from fnmatch import fnmatch
+ from qpid.messaging import *
+@@ -25,7 +27,7 @@
+ class Dispatcher:
+ 
+   def unhandled(self, msg):
+-    print "UNHANDLED MESSAGE: %s" % msg
++    print("UNHANDLED MESSAGE: %s" % msg)
+ 
+   def ignored(self, msg):
+     return False
+@@ -60,8 +62,8 @@
+         try:
+           snd = session.sender(to)
+           snd.send(r)
+-        except SendError, e:
+-          print e
++        except SendError as e:
++          print(e)
+         finally:
+           snd.close()
+ 
+--- ./mllib/__init__.py	(original)
++++ ./mllib/__init__.py	(refactored)
+@@ -22,22 +22,24 @@
+ both SGML and XML.
+ """
+ 
++from __future__ import absolute_import
+ import os, dom, transforms, parsers, sys
+ import xml.sax, types
+ from xml.sax.handler import ErrorHandler
+ from xml.sax.xmlreader import InputSource
+ from cStringIO import StringIO
++import six
+ 
+ def transform(node, *args):
+   result = node
+   for t in args:
+-    if isinstance(t, types.ClassType):
++    if isinstance(t, type):
+       t = t()
+     result = result.dispatch(t)
+   return result
+ 
+ def sgml_parse(source):
+-  if isinstance(source, basestring):
++  if isinstance(source, six.string_types):
+     source = StringIO(source)
+     fname = "<string>"
+   elif hasattr(source, "name"):
+--- ./mllib/dom.py	(original)
++++ ./mllib/dom.py	(refactored)
+@@ -25,7 +25,9 @@
+ from __future__ import generators
+ from __future__ import nested_scopes
+ 
+-import transforms
++from __future__ import absolute_import
++from . import transforms
++import six
+ 
+ class Container:
+ 
+@@ -140,7 +142,7 @@
+     Node.__init__(self)
+     self.name = _name
+     self.attrs = list(attrs)
+-    self.attrs.extend(kwargs.items())
++    self.attrs.extend(list(kwargs.items()))
+     self.singleton = False
+ 
+   def get_attr(self, name):
+@@ -177,7 +179,7 @@
+   base = None
+ 
+   def __init__(self, data):
+-    assert isinstance(data, basestring)
++    assert isinstance(data, six.string_types)
+     self.data = data
+ 
+ class Data(Leaf):
+@@ -238,7 +240,7 @@
+     sources = [iter(self.source)]
+     while sources:
+       try:
+-        nd = sources[-1].next()
++        nd = next(sources[-1])
+         if isinstance(nd, Tree):
+           sources.append(iter(nd.children))
+         else:
+@@ -267,7 +269,7 @@
+       yield value
+ 
+ def flatten_path(path):
+-  if isinstance(path, basestring):
++  if isinstance(path, six.string_types):
+     for part in path.split("/"):
+       yield part
+   elif callable(path):
+@@ -290,7 +292,7 @@
+         select = Query
+         pred = p
+         source = query
+-      elif isinstance(p, basestring):
++      elif isinstance(p, six.string_types):
+         if p[0] == "@":
+           select = Values
+           pred = lambda x, n=p[1:]: x[0] == n
+--- ./mllib/parsers.py	(original)
++++ ./mllib/parsers.py	(refactored)
+@@ -21,8 +21,9 @@
+ Parsers for SGML and XML to dom.
+ """
+ 
++from __future__ import absolute_import
+ import sgmllib, xml.sax.handler
+-from dom import *
++from .dom import *
+ 
+ class Parser:
+ 
+@@ -122,7 +123,7 @@
+     self.locator = locator
+ 
+   def startElement(self, name, attrs):
+-    self.parser.start(name, attrs.items())
++    self.parser.start(name, list(attrs.items()))
+     self.line()
+ 
+   def endElement(self, name):
+--- ./mllib/transforms.py	(original)
++++ ./mllib/transforms.py	(refactored)
+@@ -21,7 +21,8 @@
+ Useful transforms for dom objects.
+ """
+ 
+-import dom
++from __future__ import absolute_import
++from . import dom
+ from cStringIO import StringIO
+ 
+ class Visitor:
+--- ./qpid/__init__.py	(original)
++++ ./qpid/__init__.py	(refactored)
+@@ -17,7 +17,9 @@
+ # under the License.
+ #
+ 
+-import connection
++from __future__ import absolute_import
++from . import connection
++from six.moves import zip
+ 
+ class Struct:
+ 
+@@ -41,11 +43,11 @@
+     return field
+ 
+   def exists(self, attr):
+-    return self.type.fields.byname.has_key(attr)
++    return attr in self.type.fields.byname
+ 
+   def has(self, attr):
+     self._check(attr)
+-    return self._values.has_key(attr)
++    return attr in self._values
+ 
+   def set(self, attr, value):
+     self._check(attr)
+--- ./qpid/client.py	(original)
++++ ./qpid/client.py	(refactored)
+@@ -22,16 +22,19 @@
+ interacting with the server.
+ """
+ 
++from __future__ import absolute_import
+ import os, threading
+-from peer import Peer, Channel, Closed
+-from delegate import Delegate
+-from util import get_client_properties_with_defaults
+-from connection08 import Connection, Frame, connect
+-from spec08 import load
+-from queue import Queue
+-from reference import ReferenceId, References
+-from saslmech.finder import get_sasl_mechanism
+-from saslmech.sasl import SaslException
++from .peer import Peer, Channel, Closed
++from .delegate import Delegate
++from .util import get_client_properties_with_defaults
++from .connection08 import Connection, Frame, connect
++from .spec08 import load
++from .queue import Queue
++from .reference import ReferenceId, References
++from .saslmech.finder import get_sasl_mechanism
++from .saslmech.sasl import SaslException
++from six.moves import range
++from six.moves import zip
+ 
+ 
+ class Client:
+@@ -42,7 +45,7 @@
+     if spec:
+       self.spec = spec
+     else:
+-      from specs_config import amqp_spec_0_9
++      from .specs_config import amqp_spec_0_9
+       self.spec = load(amqp_spec_0_9)
+     self.structs = StructFactory(self.spec)
+     self.sessions = {}
+@@ -121,8 +124,8 @@
+     self.lock.acquire()
+     try:
+       id = None
+-      for i in xrange(1, 64*1024):
+-        if not self.sessions.has_key(i):
++      for i in range(1, 64*1024):
++        if i not in self.sessions:
+           id = i
+           break
+     finally:
+@@ -184,7 +187,7 @@
+     msg.secure_ok(response=self.client.sasl.response(msg.challenge))
+ 
+   def connection_tune(self, ch, msg):
+-    tune_params = dict(zip(('channel_max', 'frame_max', 'heartbeat'), (msg.frame.args)))
++    tune_params = dict(list(zip(('channel_max', 'frame_max', 'heartbeat'), (msg.frame.args))))
+     if self.client.tune_params:
+       tune_params.update(self.client.tune_params)
+     msg.tune_ok(**tune_params)
+@@ -257,9 +260,9 @@
+     self.factories = {}
+ 
+   def __getattr__(self, name):
+-    if self.factories.has_key(name):
++    if name in self.factories:
+       return self.factories[name]
+-    elif self.spec.domains.byname.has_key(name):
++    elif name in self.spec.domains.byname:
+       f = lambda *args, **kwargs: self.struct(name, *args, **kwargs)
+       self.factories[name] = f
+       return f
+--- ./qpid/codec.py	(original)
++++ ./qpid/codec.py	(refactored)
+@@ -26,11 +26,14 @@
+ The unit test for this module is located in tests/codec.py
+ """
+ 
++from __future__ import absolute_import
+ import re, qpid, spec08, os
+ from cStringIO import StringIO
+ from struct import *
+-from reference import ReferenceId
++from .reference import ReferenceId
+ from logging import getLogger
++import six
++from six.moves import range
+ 
+ log = getLogger("qpid.codec")
+ 
+@@ -72,10 +75,10 @@
+ 
+     self.types = {}
+     self.codes = {}
+-    self.integertypes = [int, long]
++    self.integertypes = [int, int]
+     self.encodings = {
+       float: "double", # python uses 64bit floats, send them as doubles
+-      basestring: "longstr",
++      six.string_types: "longstr",
+       None.__class__:"void",
+       list: "sequence",
+       tuple: "sequence",
+@@ -131,7 +134,7 @@
+         return "signed_long"
+       else:
+         raise ValueError('Integer value is outwith the supported 64bit signed range')
+-    if self.encodings.has_key(klass):
++    if klass in self.encodings:
+       return self.encodings[klass]
+     for base in klass.__bases__:
+       result = self.resolve(base, value)
+@@ -461,7 +464,7 @@
+       log.debug("Field table entry key: %r", key)
+       code = self.decode_octet()
+       log.debug("Field table entry type code: %r", code)
+-      if self.types.has_key(code):
++      if code in self.types:
+         value = self.decode(self.types[code])
+       else:
+         w = width(code)
+@@ -649,7 +652,7 @@
+     count = self.decode_long()
+     result = []
+     for i in range(0, count):
+-      if self.types.has_key(code):
++      if code in self.types:
+         value = self.decode(self.types[code])
+       else:
+         w = width(code)
+--- ./qpid/codec010.py	(original)
++++ ./qpid/codec010.py	(refactored)
+@@ -17,10 +17,14 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import datetime, string
+-from packer import Packer
+-from datatypes import serial, timestamp, RangedSet, Struct, UUID
+-from ops import Compound, PRIMITIVE, COMPOUND
++from .packer import Packer
++from .datatypes import serial, timestamp, RangedSet, Struct, UUID
++from .ops import Compound, PRIMITIVE, COMPOUND
++from six.moves import map
++import six
++from six.moves import range
+ 
+ class CodecException(Exception): pass
+ 
+@@ -37,11 +41,11 @@
+ 
+   ENCODINGS = {
+     bool: direct("boolean"),
+-    unicode: direct("str16"),
++    six.text_type: direct("str16"),
+     str: map_str,
+     buffer: direct("vbin32"),
+     int: direct("int64"),
+-    long: direct("int64"),
++    int: direct("int64"),
+     float: direct("double"),
+     None.__class__: direct("void"),
+     list: direct("list"),
+@@ -60,7 +64,7 @@
+     return PRIMITIVE[enc]
+ 
+   def _encoding(self, klass, obj):
+-    if self.ENCODINGS.has_key(klass):
++    if klass in self.ENCODINGS:
+       return self.ENCODINGS[klass](obj)
+     for base in klass.__bases__:
+       result = self._encoding(base, obj)
+@@ -226,7 +230,7 @@
+     if isinstance(b, buffer):
+       b = str(b)
+     # Allow unicode values in connection 'response' field
+-    if isinstance(b, unicode):
++    if isinstance(b, six.text_type):
+       b = b.encode('utf8')
+     self.write_uint32(len(b))
+     self.write(b)
+@@ -257,7 +261,7 @@
+     sc = StringCodec()
+     if m is not None:
+       sc.write_uint32(len(m))
+-      sc.write(string.joinfields(map(self._write_map_elem, m.keys(), m.values()), ""))
++      sc.write(string.joinfields(list(map(self._write_map_elem, list(m.keys()), list(m.values()))), ""))
+     self.write_vbin32(sc.encoded)
+ 
+   def read_array(self):
+@@ -339,7 +343,7 @@
+     for i in range(len(op.FIELDS)):
+       f = op.FIELDS[i]
+       if flags & (0x1 << i):
+-        if COMPOUND.has_key(f.type):
++        if f.type in COMPOUND:
+           value = self.read_compound(COMPOUND[f.type])
+         else:
+           value = getattr(self, "read_%s" % f.type)()
+@@ -360,7 +364,7 @@
+     for i in range(len(op.FIELDS)):
+       f = op.FIELDS[i]
+       if flags & (0x1 << i):
+-        if COMPOUND.has_key(f.type):
++        if f.type in COMPOUND:
+           enc = self.write_compound
+         else:
+           enc = getattr(self, "write_%s" % f.type)
+--- ./qpid/compat.py	(original)
++++ ./qpid/compat.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import sys
+ import errno
+ import time
+@@ -126,7 +127,7 @@
+         try:
+           ready, _, _ = select([self], [], [], timeout)
+           break
+-        except SelectError, e:
++        except SelectError as e:
+           if e[0] == errno.EINTR:
+             elapsed = time.time() - start
+             timeout = timeout - elapsed
+--- ./qpid/concurrency.py	(original)
++++ ./qpid/concurrency.py	(refactored)
+@@ -17,13 +17,14 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import compat, inspect, time
+ 
+ def synchronized(meth):
+   args, vargs, kwargs, defs = inspect.getargspec(meth)
+   scope = {}
+   scope["meth"] = meth
+-  exec """
++  exec("""
+ def %s%s:
+   %s
+   %s._lock.acquire()
+@@ -35,7 +36,7 @@
+        repr(inspect.getdoc(meth)), args[0],
+        inspect.formatargspec(args, vargs, kwargs, defs,
+                              formatvalue=lambda x: ""),
+-       args[0]) in scope
++       args[0]), scope)
+   return scope[meth.__name__]
+ 
+ class Waiter(object):
+--- ./qpid/connection.py	(original)
++++ ./qpid/connection.py	(refactored)
+@@ -17,17 +17,19 @@
+ # under the License.
+ #
+ 
+-import datatypes, session
++from __future__ import absolute_import
++from . import datatypes, session
+ from threading import Thread, Condition, RLock
+-from util import wait, notify
+-from codec010 import StringCodec
+-from framing import *
+-from session import Session
+-from generator import control_invoker
+-from exceptions import *
++from .util import wait, notify
++from .codec010 import StringCodec
++from .framing import *
++from .session import Session
++from .generator import control_invoker
++from .exceptions import *
+ from logging import getLogger
+ import delegates, socket
+ import sys
++from six.moves import range
+ 
+ class ChannelBusy(Exception): pass
+ 
+@@ -43,7 +45,7 @@
+ def server(*args, **kwargs):
+   return delegates.Server(*args, **kwargs)
+ 
+-from framer import Framer
++from .framer import Framer
+ 
+ class Connection(Framer):
+ 
+@@ -111,8 +113,8 @@
+       self.lock.release()
+ 
+   def __channel(self):
+-    for i in xrange(1, self.channel_max):
+-      if not self.attached.has_key(i):
++    for i in range(1, self.channel_max):
++      if i not in self.attached:
+         return i
+     else:
+       raise ChannelsBusy()
+@@ -182,7 +184,7 @@
+           break
+         else:
+           continue
+-      except socket.error, e:
++      except socket.error as e:
+         if self.aborted() or str(e) != "The read operation timed out":
+           self.close_code = (None, str(e))
+           self.detach_all()
+@@ -195,7 +197,7 @@
+       for op in op_dec.read():
+         try:
+           self.delegate.received(op)
+-        except Closed, e:
++        except Closed as e:
+           self.close_code = (None, str(e))
+           if not self.opened:
+             self.failed = True
+--- ./qpid/connection08.py	(original)
++++ ./qpid/connection08.py	(refactored)
+@@ -23,12 +23,15 @@
+ server, or even a proxy implementation.
+ """
+ 
++from __future__ import absolute_import
+ import socket, codec, errno, qpid
+ from cStringIO import StringIO
+-from codec import EOF
+-from compat import SHUT_RDWR
+-from exceptions import VersionError
++from .codec import EOF
++from .compat import SHUT_RDWR
++from .exceptions import VersionError
+ from logging import getLogger, DEBUG
++from six.moves import range
++from six.moves import zip
+ 
+ log = getLogger("qpid.connection08")
+ 
+@@ -63,7 +66,7 @@
+     try:
+       try:
+         self.sock.shutdown(SHUT_RDWR)
+-      except socket.error, e:
++      except socket.error as e:
+         if (e.errno == errno.ENOTCONN):
+           pass
+         else:
+@@ -131,7 +134,7 @@
+                          certfile=ssl_certfile,
+                          ca_certs=ssl_trustfile,
+                          cert_reqs=validate)
+-    except ImportError, e:
++    except ImportError as e:
+       # Python 2.5 and older
+       if ssl_verify_hostname:
+         log.error("Your version of Python does not support ssl hostname verification. Please upgrade your version of Python.")
+@@ -310,10 +313,10 @@
+ 
+     def __new__(cls, name, bases, dict):
+       for attr in ("encode", "decode", "type"):
+-        if not dict.has_key(attr):
++        if attr not in dict:
+           raise TypeError("%s must define %s" % (name, attr))
+       dict["decode"] = staticmethod(dict["decode"])
+-      if dict.has_key("__init__"):
++      if "__init__" in dict:
+         __init__ = dict["__init__"]
+         def init(self, *args, **kwargs):
+           args = list(args)
+--- ./qpid/content.py	(original)
++++ ./qpid/content.py	(refactored)
+@@ -21,6 +21,8 @@
+ A simple python representation for AMQP content.
+ """
+ 
++from __future__ import absolute_import
++from six.moves import map
+ def default(val, defval):
+   if val == None:
+     return defval
+--- ./qpid/datatypes.py	(original)
++++ ./qpid/datatypes.py	(refactored)
+@@ -17,8 +17,11 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import threading, struct, datetime, time
+-from exceptions import Timeout
++from .exceptions import Timeout
++from six.moves import map
++from six.moves import range
+ 
+ class Struct:
+ 
+@@ -33,10 +36,10 @@
+     for field in _type.fields:
+       if idx < len(args):
+         arg = args[idx]
+-        if kwargs.has_key(field.name):
++        if field.name in kwargs:
+           raise TypeError("%s() got multiple values for keyword argument '%s'" %
+                           (_type.name, field.name))
+-      elif kwargs.has_key(field.name):
++      elif field.name in kwargs:
+         arg = kwargs.pop(field.name)
+       else:
+         arg = field.default()
+@@ -44,7 +47,7 @@
+       idx += 1
+ 
+     if kwargs:
+-      unexpected = kwargs.keys()[0]
++      unexpected = list(kwargs.keys())[0]
+       raise TypeError("%s() got an unexpected keyword argument '%s'" %
+                       (_type.name, unexpected))
+ 
+@@ -110,7 +113,7 @@
+   def __repr__(self):
+     args = []
+     if self.headers:
+-      args.extend(map(repr, self.headers))
++      args.extend(list(map(repr, self.headers)))
+     if self.body:
+       args.append(repr(self.body))
+     if self.id is not None:
+@@ -126,19 +129,19 @@
+ class Serial:
+ 
+   def __init__(self, value):
+-    self.value = value & 0xFFFFFFFFL
++    self.value = value & 0xFFFFFFFF
+ 
+   def __hash__(self):
+     return hash(self.value)
+ 
+   def __cmp__(self, other):
+-    if other.__class__ not in (int, long, Serial):
++    if other.__class__ not in (int, int, Serial):
+       return 1
+ 
+     other = serial(other)
+ 
+-    delta = (self.value - other.value) & 0xFFFFFFFFL
+-    neg = delta & 0x80000000L
++    delta = (self.value - other.value) & 0xFFFFFFFF
++    neg = delta & 0x80000000
+     mag = delta & 0x7FFFFFFF
+ 
+     if neg:
+@@ -319,7 +322,7 @@
+   rand = random.Random()
+   rand.seed((os.getpid(), time.time(), socket.gethostname()))
+   def random_uuid():
+-    bytes = [rand.randint(0, 255) for i in xrange(16)]
++    bytes = [rand.randint(0, 255) for i in range(16)]
+ 
+     # From RFC4122, the version bits are set to 0100
+     bytes[7] &= 0x0F
+--- ./qpid/debug.py	(original)
++++ ./qpid/debug.py	(refactored)
+@@ -17,6 +17,8 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ import threading, traceback, signal, sys, time
+ 
+ def stackdump(sig, frm):
+@@ -27,7 +29,7 @@
+       code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
+       if line:
+         code.append("  %s" % (line.strip()))
+-  print "\n".join(code)
++  print("\n".join(code))
+ 
+ signal.signal(signal.SIGQUIT, stackdump)
+ 
+@@ -39,12 +41,12 @@
+   def acquire(self, blocking=1):
+     while not self.lock.acquire(blocking=0):
+       time.sleep(1)
+-      print >> sys.out, "TRYING"
++      print("TRYING", file=sys.out)
+       traceback.print_stack(None, None, out)
+-      print >> sys.out, "TRYING"
+-    print >> sys.out, "ACQUIRED"
++      print("TRYING", file=sys.out)
++    print("ACQUIRED", file=sys.out)
+     traceback.print_stack(None, None, out)
+-    print >> sys.out, "ACQUIRED"
++    print("ACQUIRED", file=sys.out)
+     return True
+ 
+   def _is_owned(self):
+--- ./qpid/delegate.py	(original)
++++ ./qpid/delegate.py	(refactored)
+@@ -21,8 +21,10 @@
+ Delegate implementation intended for use with the peer module.
+ """
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ import threading, inspect, traceback, sys
+-from connection08 import Method, Request, Response
++from .connection08 import Method, Request, Response
+ 
+ def _handler_name(method):
+   return "%s_%s" % (method.klass.name, method.name)
+@@ -46,8 +48,8 @@
+     try:
+       return handler(channel, frame)
+     except:
+-      print >> sys.stderr, "Error in handler: %s\n\n%s" % \
+-            (_handler_name(method), traceback.format_exc())
++      print("Error in handler: %s\n\n%s" % \
++            (_handler_name(method), traceback.format_exc()), file=sys.stderr)
+ 
+   def closed(self, reason):
+-    print "Connection closed: %s" % reason
++    print("Connection closed: %s" % reason)
+--- ./qpid/delegates.py	(original)
++++ ./qpid/delegates.py	(refactored)
+@@ -17,12 +17,13 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import os, connection, session
+-from util import notify, get_client_properties_with_defaults
+-from datatypes import RangedSet
+-from exceptions import VersionError, Closed
++from .util import notify, get_client_properties_with_defaults
++from .datatypes import RangedSet
++from .exceptions import VersionError, Closed
+ from logging import getLogger
+-from ops import Control
++from .ops import Control
+ import sys
+ from qpid import sasl
+ 
+@@ -187,7 +188,7 @@
+     initial = None
+     try:
+       mech, initial = self.sasl.start(mech_list)
+-    except Exception, e:
++    except Exception as e:
+       raise Closed(str(e))
+     ch.connection_start_ok(client_properties=self.client_properties,
+                            mechanism=mech, response=initial)
+@@ -196,7 +197,7 @@
+     resp = None
+     try:
+       resp = self.sasl.step(secure.challenge)
+-    except Exception, e:
++    except Exception as e:
+       raise Closed(str(e))
+     ch.connection_secure_ok(response=resp)
+ 
+--- ./qpid/disp.py	(original)
++++ ./qpid/disp.py	(refactored)
+@@ -19,7 +19,11 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ from time import strftime, gmtime
++import six
++from six.moves import range
+ 
+ class Header:
+   """ """
+@@ -130,7 +134,7 @@
+       for idx in range(diff):
+         row.append("")
+ 
+-    print title
++    print(title)
+     if len (rows) == 0:
+       return
+     colWidth = []
+@@ -139,7 +143,7 @@
+     for head in heads:
+       width = len (head)
+       for row in rows:
+-        cellWidth = len (unicode (row[col]))
++        cellWidth = len (six.text_type (row[col]))
+         if cellWidth > width:
+           width = cellWidth
+       colWidth.append (width + self.tableSpacing)
+@@ -148,23 +152,23 @@
+         for i in range (colWidth[col] - len (head)):
+           line = line + " "
+       col = col + 1
+-    print line
++    print(line)
+     line = self.tablePrefix
+     for width in colWidth:
+       line = line + "=" * width
+     line = line[:255]
+-    print line
++    print(line)
+ 
+     for row in rows:
+       line = self.tablePrefix
+       col  = 0
+       for width in colWidth:
+-        line = line + unicode (row[col])
++        line = line + six.text_type (row[col])
+         if col < len (heads) - 1:
+-          for i in range (width - len (unicode (row[col]))):
++          for i in range (width - len (six.text_type (row[col]))):
+             line = line + " "
+         col = col + 1
+-      print line
++      print(line)
+ 
+   def do_setTimeFormat (self, fmt):
+     """ Select timestamp format """
+--- ./qpid/framer.py	(original)
++++ ./qpid/framer.py	(refactored)
+@@ -17,9 +17,10 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import struct, socket
+-from exceptions import Closed
+-from packer import Packer
++from .exceptions import Closed
++from .packer import Packer
+ from threading import RLock
+ from logging import getLogger
+ 
+@@ -53,7 +54,7 @@
+       if self.security_layer_tx:
+         try:
+           cipher_buf = self.security_layer_tx.encode(self.tx_buf)
+-        except SASLError, e:
++        except SASLError as e:
+           raise Closed(str(e))
+         self._write(cipher_buf)
+       else:
+@@ -96,14 +97,14 @@
+         if self.security_layer_rx:
+           try:
+             s = self.security_layer_rx.decode(s)
+-          except SASLError, e:
++          except SASLError as e:
+             raise Closed(str(e))
+       except socket.timeout:
+         if self.aborted():
+           raise Closed()
+         else:
+           continue
+-      except socket.error, e:
++      except socket.error as e:
+         if self.rx_buf != "":
+           raise e
+         else:
+--- ./qpid/framing.py	(original)
++++ ./qpid/framing.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import struct
+ 
+ FIRST_SEG = 0x08
+@@ -197,9 +198,9 @@
+     self.frames = []
+     return result
+ 
+-from ops import COMMANDS, CONTROLS, COMPOUND, Header, segment_type, track
+-
+-from codec010 import StringCodec
++from .ops import COMMANDS, CONTROLS, COMPOUND, Header, segment_type, track
++
++from .codec010 import StringCodec
+ 
+ class OpEncoder:
+ 
+@@ -208,11 +209,11 @@
+ 
+   def write(self, *ops):
+     for op in ops:
+-      if COMMANDS.has_key(op.NAME):
++      if op.NAME in COMMANDS:
+         seg_type = segment_type.command
+         seg_track = track.command
+         enc = self.encode_command(op)
+-      elif CONTROLS.has_key(op.NAME):
++      elif op.NAME in CONTROLS:
+         seg_type = segment_type.control
+         seg_track = track.control
+         enc = self.encode_compound(op)
+--- ./qpid/generator.py	(original)
++++ ./qpid/generator.py	(refactored)
+@@ -17,9 +17,11 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import sys
+ 
+-from ops import *
++from .ops import *
++import six
+ 
+ def METHOD(module, op):
+   method = lambda self, *args, **kwargs: self.invoke(op, args, kwargs)
+@@ -33,15 +35,15 @@
+   dict = {}
+ 
+   for name, enum in ENUMS.items():
+-    if isinstance(name, basestring):
++    if isinstance(name, six.string_types):
+       dict[name] = enum
+ 
+   for name, op in COMPOUND.items():
+-    if isinstance(name, basestring):
++    if isinstance(name, six.string_types):
+       dict[name] = METHOD(module, op)
+ 
+   for name, op in operations.items():
+-    if isinstance(name, basestring):
++    if isinstance(name, six.string_types):
+       dict[name] = METHOD(module, op)
+ 
+   return dict
+--- ./qpid/lexer.py	(original)
++++ ./qpid/lexer.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ import re
+ 
+ class Type:
+--- ./qpid/log.py	(original)
++++ ./qpid/log.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from logging import getLogger, StreamHandler, Formatter
+ from logging import DEBUG, INFO, WARN, ERROR, CRITICAL
+ 
+--- ./qpid/management.py	(original)
++++ ./qpid/management.py	(refactored)
+@@ -25,15 +25,17 @@
+ Management API for Qpid
+ """
+ 
++from __future__ import absolute_import
+ import qpid
+ import struct
+ import socket
+ from threading    import Thread
+-from datatypes    import Message, RangedSet
++from .datatypes    import Message, RangedSet
+ from time         import time
+ from cStringIO    import StringIO
+-from codec010     import StringCodec as Codec
++from .codec010     import StringCodec as Codec
+ from threading    import Lock, Condition
++from six.moves import range
+ 
+ 
+ class SequenceManager:
+@@ -177,12 +179,12 @@
+     ssn.incoming ("rdest").listen (self.replyCb)
+ 
+     ssn.message_set_flow_mode (destination="tdest", flow_mode=1)
+-    ssn.message_flow (destination="tdest", unit=0, value=0xFFFFFFFFL)
+-    ssn.message_flow (destination="tdest", unit=1, value=0xFFFFFFFFL)
++    ssn.message_flow (destination="tdest", unit=0, value=0xFFFFFFFF)
++    ssn.message_flow (destination="tdest", unit=1, value=0xFFFFFFFF)
+ 
+     ssn.message_set_flow_mode (destination="rdest", flow_mode=1)
+-    ssn.message_flow (destination="rdest", unit=0, value=0xFFFFFFFFL)
+-    ssn.message_flow (destination="rdest", unit=1, value=0xFFFFFFFFL)
++    ssn.message_flow (destination="rdest", unit=0, value=0xFFFFFFFF)
++    ssn.message_flow (destination="rdest", unit=1, value=0xFFFFFFFF)
+ 
+   def setBrokerInfo (self, data):
+     self.brokerInfo = data
+@@ -434,9 +436,9 @@
+     elif typecode == 2:
+       codec.write_uint16 (int  (value))
+     elif typecode == 3:
+-      codec.write_uint32 (long (value))
++      codec.write_uint32 (int (value))
+     elif typecode == 4:
+-      codec.write_uint64 (long (value))
++      codec.write_uint64 (int (value))
+     elif typecode == 5:
+       codec.write_uint8  (int  (value))
+     elif typecode == 6:
+@@ -444,9 +446,9 @@
+     elif typecode == 7:
+       codec.write_str16 (value)
+     elif typecode == 8:  # ABSTIME
+-      codec.write_uint64 (long (value))
++      codec.write_uint64 (int (value))
+     elif typecode == 9:  # DELTATIME
+-      codec.write_uint64 (long (value))
++      codec.write_uint64 (int (value))
+     elif typecode == 10: # REF
+       value.encode(codec)
+     elif typecode == 11: # BOOL
+--- ./qpid/managementdata.py	(original)
++++ ./qpid/managementdata.py	(refactored)
+@@ -24,6 +24,8 @@
+ ## This file is being obsoleted by qmf/console.py
+ ###############################################################################
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ import qpid
+ import re
+ import socket
+@@ -34,10 +36,11 @@
+ from qpid.connection import Timeout
+ from qpid.management import managementChannel, managementClient
+ from threading       import Lock
+-from disp            import Display
++from .disp            import Display
+ from shlex           import split
+ from qpid.connection import Connection
+ from qpid.util       import connect
++from six.moves import range
+ 
+ class Broker:
+   def __init__ (self, text):
+@@ -171,14 +174,14 @@
+     try:
+       line = "Call Result: " + self.methodsPending[sequence] + \
+              "  " + str (status) + " (" + sText + ")"
+-      print line, args
++      print(line, args)
+       del self.methodsPending[sequence]
+     finally:
+       self.lock.release ()
+ 
+   def closeHandler (self, context, reason):
+     if self.operational:
+-      print "Connection to broker lost:", reason
++      print("Connection to broker lost:", reason)
+     self.operational = False
+     if self.cli != None:
+       self.cli.setPromptMessage ("Broker Disconnected")
+@@ -423,7 +426,7 @@
+           if token.find ("-") != -1:
+             ids = token.split("-", 2)
+             for id in range (int (ids[0]), int (ids[1]) + 1):
+-              if self.getClassForId (self.rawObjId (long (id))) == classKey:
++              if self.getClassForId (self.rawObjId (int (id))) == classKey:
+                 list.append (id)
+           else:
+             list.append (int(token))
+@@ -439,7 +442,7 @@
+     self.lock.acquire ()
+     try:
+       rows = []
+-      sorted = self.tables.keys ()
++      sorted = list(self.tables.keys ())
+       sorted.sort ()
+       for name in sorted:
+         active  = 0
+@@ -458,21 +461,21 @@
+         self.disp.table ("Management Object Types:",
+                          ("ObjectType", "Active", "Deleted"), rows)
+       else:
+-        print "Waiting for next periodic update"
++        print("Waiting for next periodic update")
+     finally:
+       self.lock.release ()
+ 
+   def listObjects (self, tokens):
+     """ Generate a display of a list of objects in a class """
+     if len(tokens) == 0:
+-      print "Error - No class name provided"
++      print("Error - No class name provided")
+       return
+ 
+     self.lock.acquire ()
+     try:
+       classKey = self.getClassKey (tokens[0])
+       if classKey == None:
+-        print ("Object type %s not known" % tokens[0])
++        print(("Object type %s not known" % tokens[0]))
+       else:
+         rows = []
+         if classKey in self.tables:
+@@ -506,24 +509,24 @@
+         classKey  = self.getClassForId (self.rawObjId (rootId))
+         remaining = tokens
+         if classKey == None:
+-          print "Id not known: %d" % int (tokens[0])
++          print("Id not known: %d" % int (tokens[0]))
+           raise ValueError ()
+       else:
+         classKey  = self.getClassKey (tokens[0])
+         remaining = tokens[1:]
+         if classKey not in self.tables:
+-          print "Class not known: %s" % tokens[0]
++          print("Class not known: %s" % tokens[0])
+           raise ValueError ()
+ 
+       userIds = self.listOfIds (classKey, remaining)
+       if len (userIds) == 0:
+-        print "No object IDs supplied"
++        print("No object IDs supplied")
+         raise ValueError ()
+ 
+       ids = []
+       for id in userIds:
+-        if self.getClassForId (self.rawObjId (long (id))) == classKey:
+-          ids.append (self.rawObjId (long (id)))
++        if self.getClassForId (self.rawObjId (int (id))) == classKey:
++          ids.append (self.rawObjId (int (id)))
+ 
+       rows = []
+       timestamp = None
+@@ -567,7 +570,7 @@
+     self.lock.acquire ()
+     try:
+       rows = []
+-      sorted = self.schema.keys ()
++      sorted = list(self.schema.keys ())
+       sorted.sort ()
+       for classKey in sorted:
+         tuple = self.schema[classKey]
+@@ -586,7 +589,7 @@
+     try:
+       classKey = self.getClassKey (className)
+       if classKey == None:
+-        print ("Class name %s not known" % className)
++        print(("Class name %s not known" % className))
+         raise ValueError ()
+ 
+       rows = []
+@@ -645,7 +648,7 @@
+         titles = ("Argument", "Type", "Direction", "Unit", "Notes", "Description")
+         self.disp.table (caption, titles, rows)
+ 
+-    except Exception,e:
++    except Exception as e:
+       pass
+     self.lock.release ()
+ 
+@@ -665,7 +668,7 @@
+         raise ValueError ()
+ 
+       if methodName not in self.schema[classKey][2]:
+-        print "Method '%s' not valid for class '%s'" % (methodName, self.displayClassName(classKey))
++        print("Method '%s' not valid for class '%s'" % (methodName, self.displayClassName(classKey)))
+         raise ValueError ()
+ 
+       schemaMethod = self.schema[classKey][2][methodName]
+@@ -674,7 +677,7 @@
+         if schemaMethod[1][arg][2].find("I") != -1:
+           count += 1
+       if len (args) != count:
+-        print "Wrong number of method args: Need %d, Got %d" % (count, len (args))
++        print("Wrong number of method args: Need %d, Got %d" % (count, len (args)))
+         raise ValueError ()
+ 
+       namedArgs = {}
+@@ -686,7 +689,7 @@
+ 
+       self.methodSeq = self.methodSeq + 1
+       self.methodsPending[self.methodSeq] = methodName
+-    except Exception, e:
++    except Exception as e:
+       methodOk = False
+     self.lock.release ()
+     if methodOk:
+@@ -715,7 +718,7 @@
+   def listIds (self, select):
+     rows = []
+     if select == 0:
+-      sorted = self.idMap.keys()
++      sorted = list(self.idMap.keys())
+       sorted.sort()
+       for displayId in sorted:
+         row = self.makeIdRow (displayId)
+@@ -723,7 +726,7 @@
+     else:
+       row = self.makeIdRow (select)
+       if row == None:
+-        print "Display Id %d not known" % select
++        print("Display Id %d not known" % select)
+         return
+       rows.append(row)
+     self.disp.table("Translation of Display IDs:",
+@@ -754,10 +757,10 @@
+     except:
+       tokens = encTokens
+     if len (tokens) < 2:
+-      print "Not enough arguments supplied"
++      print("Not enough arguments supplied")
+       return
+     
+-    displayId  = long (tokens[0])
++    displayId  = int (tokens[0])
+     methodName = tokens[1]
+     args       = tokens[2:]
+     self.callMethod (displayId, methodName, args)
+--- ./qpid/message.py	(original)
++++ ./qpid/message.py	(refactored)
+@@ -16,7 +16,8 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
+-from connection08 import Method, Request
++from __future__ import absolute_import
++from .connection08 import Method, Request
+ 
+ class Message:
+ 
+@@ -26,7 +27,7 @@
+     self.method = frame.method_type
+     self.content = content
+     if self.method.is_l4_command():
+-      self.command_id = self.channel.incoming_completion.sequence.next()
++      self.command_id = next(self.channel.incoming_completion.sequence)
+       #print "allocated: ", self.command_id, "to ", self.method.klass.name, "_", self.method.name
+ 
+   def __len__(self):
+@@ -43,7 +44,7 @@
+ 
+   def __getattr__(self, attr):
+     fields = self.method.fields.byname
+-    if fields.has_key(attr):
++    if attr in fields:
+       f = fields[attr]
+       result = self[self.method.fields.index(f)]
+     else:
+@@ -51,7 +52,7 @@
+         if attr == r.name:
+           def respond(*args, **kwargs):
+             batch=0
+-            if kwargs.has_key("batchoffset"):
++            if "batchoffset" in kwargs:
+               batch=kwargs.pop("batchoffset")
+             self.channel.respond(Method(r, r.arguments(*args, **kwargs)), batch, self.frame)
+           result = respond
+--- ./qpid/mimetype.py	(original)
++++ ./qpid/mimetype.py	(refactored)
+@@ -16,9 +16,10 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ import re, rfc822
+-from lexer import Lexicon, LexError
+-from parser import Parser, ParseError
++from .lexer import Lexicon, LexError
++from .parser import Parser, ParseError
+ 
+ l = Lexicon()
+ 
+@@ -98,7 +99,7 @@
+     elif self.matches(STRING):
+       return rfc822.unquote(self.eat().value)
+     else:
+-      raise ParseError(self.next(), TOKEN, STRING)
++      raise ParseError(next(self), TOKEN, STRING)
+ 
+ def parse(addr):
+   return MimeTypeParser(lex(addr)).parse()
+--- ./qpid/ops.py	(original)
++++ ./qpid/ops.py	(refactored)
+@@ -16,8 +16,10 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
+-import os, mllib, cPickle as pickle, sys
+-from util import fill
++from __future__ import absolute_import
++from __future__ import print_function
++import os, mllib, six.moves.cPickle as pickle, sys
++from .util import fill
+ 
+ class Primitive(object):
+   pass
+@@ -26,7 +28,7 @@
+ 
+   # XXX: for backwards compatibility
+   def values(cls):
+-    print >> sys.stderr, "warning, please use .VALUES instead of .values()"
++    print("warning, please use .VALUES instead of .values()", file=sys.stderr)
+     return cls.VALUES
+   # we can't use the backport preprocessor here because this code gets
+   # called by setup.py
+@@ -59,7 +61,7 @@
+                       (self.__class__.__name__, len(self.ARGS),
+                        len(self.ARGS) + len(args)))
+     if kwargs:
+-      raise TypeError("got unexpected keyword argument '%s'" % kwargs.keys()[0])
++      raise TypeError("got unexpected keyword argument '%s'" % list(kwargs.keys())[0])
+ 
+   def fields(self):
+     result = {}
+@@ -225,8 +227,8 @@
+ def resolve(nd, domains):
+   candidates = qualify(nd, "@type"), pythonize(nd["@type"])
+   for c in candidates:
+-    if domains.has_key(c):
+-      while domains.has_key(c):
++    if c in domains:
++      while c in domains:
+         c = domains[c]
+       return c
+   else:
+@@ -264,7 +266,7 @@
+       f.close()
+   return types
+ 
+-from specs_config import amqp_spec as file
++from .specs_config import amqp_spec as file
+ types = load_types(file)
+ 
+ ENUMS = {}
+--- ./qpid/packer.py	(original)
++++ ./qpid/packer.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import struct
+ 
+ class Packer:
+--- ./qpid/parser.py	(original)
++++ ./qpid/parser.py	(refactored)
+@@ -17,6 +17,8 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from six.moves import map
+ class ParseError(Exception):
+ 
+   def __init__(self, token, *expected):
+@@ -46,9 +48,9 @@
+ 
+   def eat(self, *types):
+     if types and not self.matches(*types):
+-      raise ParseError(self.next(), *types)
++      raise ParseError(next(self), *types)
+     else:
+-      t = self.next()
++      t = next(self)
+       self.idx += 1
+       return t
+ 
+--- ./qpid/peer.py	(original)
++++ ./qpid/peer.py	(refactored)
+@@ -24,15 +24,18 @@
+ incoming method frames to a delegate.
+ """
+ 
++from __future__ import absolute_import
+ import threading, traceback, socket, sys
+-from connection08 import EOF, Method, Header, Body, Request, Response, VersionError
+-from message import Message
+-from queue import Queue, Closed as QueueClosed
+-from content import Content
++from .connection08 import EOF, Method, Header, Body, Request, Response, VersionError
++from .message import Message
++from .queue import Queue, Closed as QueueClosed
++from .content import Content
+ from cStringIO import StringIO
+ from time import time
+-from exceptions import Closed, Timeout, ContentError
++from .exceptions import Closed, Timeout, ContentError
+ from logging import getLogger
++import six
++from six.moves import range
+ 
+ log = getLogger("qpid.peer")
+ 
+@@ -104,12 +107,12 @@
+       while True:
+         try:
+           frame = self.conn.read()
+-        except EOF, e:
++        except EOF as e:
+           self.work.close("Connection lost")
+           break
+         ch = self.channel(frame.channel)
+         ch.receive(frame, self.work)
+-    except VersionError, e:
++    except VersionError as e:
+       self.closed(e)
+     except:
+       self.fatal()
+@@ -129,7 +132,7 @@
+         try:
+           message = self.outgoing.get()
+           self.conn.write(message)
+-        except socket.error, e:
++        except socket.error as e:
+           self.closed(e)
+           break
+         self.conn.flush()
+@@ -150,7 +153,7 @@
+           content = None
+ 
+         self.delegate(channel, Message(channel, frame, content))
+-    except QueueClosed, e:
++    except QueueClosed as e:
+       self.closed(str(e) or "worker closed")
+     except:
+       self.fatal()
+@@ -182,7 +185,7 @@
+     self.outstanding = {}
+ 
+   def request(self, method, listener, content = None):
+-    frame = Request(self.sequence.next(), self.mark, method)
++    frame = Request(next(self.sequence), self.mark, method)
+     self.outstanding[frame.id] = listener
+     self.write(frame, content)
+ 
+@@ -202,9 +205,9 @@
+     else:
+       # allow batching from frame at either end
+       if batch<0:
+-        frame = Response(self.sequence.next(), request.id+batch, -batch, method)
++        frame = Response(next(self.sequence), request.id+batch, -batch, method)
+       else:
+-        frame = Response(self.sequence.next(), request.id, batch, method)
++        frame = Response(next(self.sequence), request.id, batch, method)
+       self.write(frame)
+ 
+ class Channel:
+@@ -266,12 +269,12 @@
+     for child in content.children:
+       self.write_content(klass, child)
+     if content.body:
+-      if not isinstance(content.body, (basestring, buffer)):
++      if not isinstance(content.body, (six.string_types, buffer)):
+         # The 0-8..0-91 client does not support the messages bodies apart from string/buffer - fail early
+         # if other type
+         raise ContentError("Content body must be string or buffer, not a %s" % type(content.body))
+       frame_max = self.client.tune_params['frame_max'] - self.client.conn.AMQP_HEADER_SIZE
+-      for chunk in (content.body[i:i + frame_max] for i in xrange(0, len(content.body), frame_max)):
++      for chunk in (content.body[i:i + frame_max] for i in range(0, len(content.body), frame_max)):
+         self.write(Body(chunk))
+ 
+   def receive(self, frame, work):
+@@ -339,7 +342,7 @@
+         return Message(self, resp, read_content(self.responses))
+       else:
+         return Message(self, resp)
+-    except QueueClosed, e:
++    except QueueClosed as e:
+       if self._closed:
+         raise Closed(self.reason)
+       else:
+@@ -396,7 +399,7 @@
+           raise Closed(self.reason)
+         if not completed:
+           self.closed("Timed-out waiting for completion of %s" % frame)
+-    except QueueClosed, e:
++    except QueueClosed as e:
+       if self._closed:
+         raise Closed(self.reason)
+       else:
+@@ -473,7 +476,7 @@
+   def next_command(self, method):
+     #the following test is a hack until the track/sub-channel is available
+     if method.is_l4_command():
+-      self.command_id = self.sequence.next()
++      self.command_id = next(self.sequence)
+ 
+   def reset(self):
+     self.sequence = Sequence(0) #reset counter
+@@ -534,6 +537,6 @@
+       #TODO: record and manage the ranges properly
+       range = [mark, mark]
+       if (self.mark == -1):#hack until wraparound is implemented        
+-        self.channel.execution_complete(cumulative_execution_mark=0xFFFFFFFFL, ranged_execution_set=range)
++        self.channel.execution_complete(cumulative_execution_mark=0xFFFFFFFF, ranged_execution_set=range)
+       else:
+         self.channel.execution_complete(cumulative_execution_mark=self.mark, ranged_execution_set=range)
+--- ./qpid/queue.py	(original)
++++ ./qpid/queue.py	(refactored)
+@@ -23,9 +23,10 @@
+ content of a queue can be notified if the queue is no longer in use.
+ """
+ 
+-from Queue import Queue as BaseQueue, Empty, Full
++from __future__ import absolute_import
++from six.moves.queue import Queue as BaseQueue, Empty, Full
+ from threading import Thread
+-from exceptions import Closed
++from .exceptions import Closed
+ 
+ class Queue(BaseQueue):
+ 
+@@ -83,7 +84,7 @@
+         o = self.get()
+         if o == Queue.STOP: break
+         self.listener(o)
+-      except Closed, e:
++      except Closed as e:
+         if self.exc_listener is not None:
+           self.exc_listener(e)
+         break
+--- ./qpid/reference.py	(original)
++++ ./qpid/reference.py	(refactored)
+@@ -23,8 +23,9 @@
+ Support for amqp 'reference' content (as opposed to inline content)
+ """
+ 
++from __future__ import absolute_import
+ import threading
+-from queue import Queue, Closed
++from .queue import Queue, Closed
+ 
+ class NotOpened(Exception): pass
+ 
+@@ -71,7 +72,7 @@
+     def next(self):
+         try:
+             return self.get_chunk()
+-        except Closed, e:
++        except Closed as e:
+             raise StopIteration
+ 
+     def __iter__(self):
+--- ./qpid/sasl.py	(original)
++++ ./qpid/sasl.py	(refactored)
+@@ -17,7 +17,9 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import socket
++import six
+ 
+ class SASLError(Exception):
+   pass
+@@ -29,7 +31,7 @@
+ 
+   def setAttr(self, name, value):
+     # Allow unicode user names and passwords
+-    if isinstance(value, unicode):
++    if isinstance(value, six.text_type):
+       value = value.encode('utf8')
+     status = self._cli.setAttr(str(name), str(value))
+     if status and name == 'username':
+--- ./qpid/selector.py	(original)
++++ ./qpid/selector.py	(refactored)
+@@ -16,8 +16,9 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ import time, errno, os, atexit, traceback
+-from compat import select, SelectError, set, selectable_waiter, format_exc
++from .compat import select, SelectError, set, selectable_waiter, format_exc
+ from threading import Thread, Lock
+ from logging import getLogger
+ from qpid.messaging import InternalError
+@@ -151,7 +152,7 @@
+               timeout = max(0, wakeup - time.time())
+             rd, wr, ex = select(self.reading, self.writing, (), timeout)
+             break
+-          except SelectError, e:
++          except SelectError as e:
+             # Repeat the select call if we were interrupted.
+             if e[0] == errno.EINTR:
+               continue
+@@ -172,7 +173,7 @@
+           w = sel.timing()
+           if w is not None and now > w:
+             sel.timeout()
+-    except Exception, e:
++    except Exception as e:
+       log.error("qpid.messaging thread died: %s" % e)
+       self.exception = SelectorStopped(str(e))
+     self.exception = self.exception or self.stopped
+@@ -198,11 +199,11 @@
+             disable(l, self.exception)
+           disable(ssn, self.exception)
+         disable(c, self.exception)
+-    except Exception, e:
++    except Exception as e:
+       log.error("error stopping qpid.messaging (%s)\n%s", self.exception, format_exc())
+     try:
+       self.waiter.close()
+-    except Exception, e:
++    except Exception as e:
+       log.error("error stopping qpid.messaging (%s)\n%s", self.exception, format_exc())
+ 
+ # Disable an object so it raises exceptions on any use
+--- ./qpid/session.py	(original)
++++ ./qpid/session.py	(refactored)
+@@ -17,15 +17,16 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from threading import Condition, RLock, Lock, currentThread
+-from generator import command_invoker
+-from datatypes import RangedSet, Struct, Future
+-from codec010 import StringCodec
+-from queue import Queue
+-from datatypes import Message, serial
+-from ops import Command, MessageTransfer
+-from util import wait, notify
+-from exceptions import *
++from .generator import command_invoker
++from .datatypes import RangedSet, Struct, Future
++from .codec010 import StringCodec
++from .queue import Queue
++from .datatypes import Message, serial
++from .ops import Command, MessageTransfer
++from .util import wait, notify
++from .exceptions import *
+ from logging import getLogger
+ 
+ log = getLogger("qpid.io.cmd")
+@@ -275,7 +276,7 @@
+   def start(self):
+     self.session.message_set_flow_mode(self.destination, self.session.flow_mode.credit)
+     for unit in self.session.credit_unit.VALUES:
+-      self.session.message_flow(self.destination, unit, 0xFFFFFFFFL)
++      self.session.message_flow(self.destination, unit, 0xFFFFFFFF)
+ 
+   def stop(self):
+     self.session.message_cancel(self.destination)
+--- ./qpid/spec08.py	(original)
++++ ./qpid/spec08.py	(refactored)
+@@ -29,8 +29,10 @@
+ situations.
+ """
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ import re, new, mllib, qpid
+-from util import fill
++from .util import fill
+ 
+ class SpecContainer:
+ 
+@@ -41,11 +43,11 @@
+     self.indexes = {}
+ 
+   def add(self, item):
+-    if self.byname.has_key(item.name):
++    if item.name in self.byname:
+       raise ValueError("duplicate name: %s" % item)
+     if item.id == None:
+       item.id = len(self)
+-    elif self.byid.has_key(item.id):
++    elif item.id in self.byid:
+       raise ValueError("duplicate id: %s" % item)
+     self.indexes[item] = len(self.items)
+     self.items.append(item)
+@@ -72,7 +74,7 @@
+     pass
+ 
+   def __str__(self):
+-    args = map(lambda f: "%s=%s" % (f, getattr(self, f)), self.PRINT)
++    args = ["%s=%s" % (f, getattr(self, f)) for f in self.PRINT]
+     return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
+ 
+   def __repr__(self):
+@@ -100,12 +102,12 @@
+     self.klass = self.define_class("Amqp%s%s" % (self.major, self.minor))
+ 
+   def method(self, name):
+-    if not self.methods.has_key(name):
++    if name not in self.methods:
+       for cls in self.classes:
+         clen = len(cls.name)
+         if name.startswith(cls.name) and name[clen] == "_":
+           end = name[clen + 1:]
+-          if cls.methods.byname.has_key(end):
++          if end in cls.methods.byname:
+             self.methods[name] = cls.methods.byname[end]
+     return self.methods.get(name)
+ 
+@@ -225,12 +227,12 @@
+       idx = self.fields.index(f)
+       if idx < len(args):
+         result.append(args[idx])
+-      elif kwargs.has_key(f.name):
++      elif f.name in kwargs:
+         result.append(kwargs.pop(f.name))
+       else:
+         result.append(Method.DEFAULTS[f.type])
+     for key, value in kwargs.items():
+-      if self.fields.byname.has_key(key):
++      if key in self.fields.byname:
+         self._type_error("got multiple values for keyword argument '%s'", key)
+       else:
+         self._type_error("got an unexpected keyword argument '%s'", key)
+@@ -287,7 +289,7 @@
+     if self.content:
+       code += ", content"
+     code += ")"
+-    exec code in g, l
++    exec(code, g, l)
+     return l[name]
+ 
+ class Field(Metadata):
+@@ -351,7 +353,7 @@
+       type = f_nd["@type"]
+     type = pythonize(type)
+     domain = None
+-    while domains.has_key(type) and domains[type].type != type:
++    while type in domains and domains[type].type != type:
+       domain = domains[type]
+       type = domain.type
+     l.add(Field(pythonize(f_nd["@name"]), f_nd.index(), type, domain,
+@@ -362,7 +364,7 @@
+   spec_root = doc["amqp"]
+   spec = Spec(int(spec_root["@major"]), int(spec_root["@minor"]), specfile)
+ 
+-  for root in [spec_root] + map(lambda x: mllib.xml_parse(x)["amqp"], errata):
++  for root in [spec_root] + [mllib.xml_parse(x)["amqp"] for x in errata]:
+     # constants
+     for nd in root.query["constant"]:
+       val = nd["@value"]
+@@ -372,7 +374,7 @@
+                        get_docs(nd))
+       try:
+         spec.constants.add(const)
+-      except ValueError, e:
++      except ValueError as e:
+         pass
+         #print "Warning:", e
+ 
+@@ -402,7 +404,7 @@
+     # classes
+     for c_nd in root.query["class"]:
+       cname = pythonize(c_nd["@name"])
+-      if spec.classes.byname.has_key(cname):
++      if cname in spec.classes.byname:
+         klass = spec.classes.byname[cname]
+       else:
+         klass = Class(spec, cname, int(c_nd["@index"]), c_nd["@handler"],
+@@ -413,7 +415,7 @@
+       load_fields(c_nd, klass.fields, spec.domains.byname)
+       for m_nd in c_nd.query["method"]:
+         mname = pythonize(m_nd["@name"])
+-        if klass.methods.byname.has_key(mname):
++        if mname in klass.methods.byname:
+           meth = klass.methods.byname[mname]
+         else:
+           meth = Method(klass, mname,
+@@ -501,4 +503,4 @@
+     rows.append('<tr><td colspan="3">%s</td></tr>' % rule.text)
+     rows.append('<tr><td colspan="3">&nbsp;</td></tr>')
+ 
+-  print template % "\n".join(rows)
++  print(template % "\n".join(rows))
+--- ./qpid/specs_config.py	(original)
++++ ./qpid/specs_config.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import os
+ 
+ AMQP_SPEC_DIR=os.path.join(os.path.dirname(os.path.abspath(__file__)), "specs")
+--- ./qpid/testlib.py	(original)
++++ ./qpid/testlib.py	(refactored)
+@@ -21,12 +21,14 @@
+ # Support library for qpid python tests.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ import string
+ import random
+ 
+ import unittest, traceback, socket
+ import qpid.client, qmf.console
+-import Queue
++import six.moves.queue
+ from qpid.content import Content
+ from qpid.message import Message
+ from qpid.harness import Skipped
+@@ -34,6 +36,7 @@
+ 
+ import qpid.messaging
+ from qpidtoollibs import BrokerAgent
++from six.moves import range
+ 
+ class TestBase(unittest.TestCase):
+     """Base class for Qpid test cases.
+@@ -71,8 +74,8 @@
+             for ch, ex in self.exchanges:
+                 ch.exchange_delete(exchange=ex)
+         except:
+-            print "Error on tearDown:"
+-            print traceback.print_exc()
++            print("Error on tearDown:")
++            print(traceback.print_exc())
+ 
+         self.client.close()
+ 
+@@ -93,12 +96,12 @@
+         client = qpid.client.Client(host, port)
+         try:
+           client.start(username = user, password=password, tune_params=tune_params, client_properties=client_properties, channel_options=channel_options)
+-        except qpid.client.Closed, e:
++        except qpid.client.Closed as e:
+             if isinstance(e.args[0], VersionError):
+                 raise Skipped(e.args[0])
+             else:
+                 raise e
+-        except socket.error, e:
++        except socket.error as e:
+             raise Skipped(e)
+         return client
+ 
+@@ -136,15 +139,15 @@
+         channel = channel or self.channel
+         consumer_tag = keys["destination"]
+         channel.message_subscribe(**keys)
+-        channel.message_flow(destination=consumer_tag, unit=0, value=0xFFFFFFFFL)
+-        channel.message_flow(destination=consumer_tag, unit=1, value=0xFFFFFFFFL)
++        channel.message_flow(destination=consumer_tag, unit=0, value=0xFFFFFFFF)
++        channel.message_flow(destination=consumer_tag, unit=1, value=0xFFFFFFFF)
+ 
+     def assertEmpty(self, queue):
+         """Assert that the queue is empty"""
+         try:
+             queue.get(timeout=1)
+             self.fail("Queue is not empty.")
+-        except Queue.Empty: None              # Ignore
++        except six.moves.queue.Empty: None              # Ignore
+ 
+     def assertPublishGet(self, queue, exchange="", routing_key="", properties=None):
+         """
+@@ -230,7 +233,7 @@
+             default_port = self.DEFAULT_PORT
+         try:
+             sock = connect(host or url.host, port or url.port or default_port)
+-        except socket.error, e:
++        except socket.error as e:
+             raise Skipped(e)
+         if url.scheme == URL.AMQPS:
+             sock = ssl(sock)
+@@ -238,7 +241,7 @@
+                           password=url.password or self.DEFAULT_PASSWORD)
+         try:
+             conn.start(timeout=10)
+-        except VersionError, e:
++        except VersionError as e:
+             raise Skipped(e)
+         return conn
+ 
+@@ -252,5 +255,5 @@
+         session = session or self.session
+         consumer_tag = keys["destination"]
+         session.message_subscribe(**keys)
+-        session.message_flow(destination=consumer_tag, unit=0, value=0xFFFFFFFFL)
+-        session.message_flow(destination=consumer_tag, unit=1, value=0xFFFFFFFFL)
++        session.message_flow(destination=consumer_tag, unit=0, value=0xFFFFFFFF)
++        session.message_flow(destination=consumer_tag, unit=1, value=0xFFFFFFFF)
+--- ./qpid/util.py	(original)
++++ ./qpid/util.py	(refactored)
+@@ -17,7 +17,9 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import os, socket, time, textwrap, re, sys
++import six
+ 
+ try:
+   from ssl import wrap_socket as ssl
+@@ -76,7 +78,7 @@
+     try:
+       sock.connect(sa)
+       break
+-    except socket.error, msg:
++    except socket.error as msg:
+       sock.close()
+   else:
+     # If we got here then we couldn't connect (yet)
+@@ -191,7 +193,7 @@
+     return s
+ 
+   def __eq__(self, url):
+-    if isinstance(url, basestring):
++    if isinstance(url, six.string_types):
+       url = URL(url)
+     return \
+       self.scheme==url.scheme and \
+--- ./qpid/messaging/__init__.py	(original)
++++ ./qpid/messaging/__init__.py	(refactored)
+@@ -28,6 +28,7 @@
+   - protocol negotiation/multiprotocol impl
+ """
+ 
++from __future__ import absolute_import
+ from qpid.datatypes import timestamp, uuid4, Serial
+ from qpid.messaging.constants import *
+ from qpid.messaging.endpoints import *
+--- ./qpid/messaging/address.py	(original)
++++ ./qpid/messaging/address.py	(refactored)
+@@ -16,9 +16,11 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ import re
+ from qpid.lexer import Lexicon, LexError
+ from qpid.parser import Parser, ParseError
++from six.moves import map
+ 
+ l = Lexicon()
+ 
+@@ -92,7 +94,7 @@
+     name = toks2str(self.eat_until(SLASH, SEMI, EOF))
+ 
+     if name is None:
+-      raise ParseError(self.next())
++      raise ParseError(next(self))
+ 
+     if self.matches(SLASH):
+       self.eat(SLASH)
+@@ -120,11 +122,11 @@
+         elif self.matches(RBRACE):
+           break
+         else:
+-          raise ParseError(self.next(), COMMA, RBRACE)
++          raise ParseError(next(self), COMMA, RBRACE)
+       elif self.matches(RBRACE):
+         break
+       else:
+-        raise ParseError(self.next(), NUMBER, STRING, ID, LBRACE, LBRACK,
++        raise ParseError(next(self), NUMBER, STRING, ID, LBRACE, LBRACK,
+                          RBRACE)
+ 
+     self.eat(RBRACE)
+@@ -144,7 +146,7 @@
+     elif self.matches(LBRACK):
+       return self.list()
+     else:
+-      raise ParseError(self.next(), NUMBER, STRING, ID, LBRACE, LBRACK)
++      raise ParseError(next(self), NUMBER, STRING, ID, LBRACE, LBRACK)
+ 
+   def list(self):
+     self.eat(LBRACK)
+@@ -161,7 +163,7 @@
+         elif self.matches(RBRACK):
+           break
+         else:
+-          raise ParseError(self.next(), COMMA, RBRACK)
++          raise ParseError(next(self), COMMA, RBRACK)
+ 
+     self.eat(RBRACK)
+     return result
+--- ./qpid/messaging/constants.py	(original)
++++ ./qpid/messaging/constants.py	(refactored)
+@@ -34,7 +34,7 @@
+ AMQP_PORT = 5672
+ AMQPS_PORT = 5671
+ 
+-UNLIMITED = Constant("UNLIMITED", 0xFFFFFFFFL)
++UNLIMITED = Constant("UNLIMITED", 0xFFFFFFFF)
+ 
+ REJECTED = Constant("REJECTED")
+ RELEASED = Constant("RELEASED")
+--- ./qpid/messaging/driver.py	(original)
++++ ./qpid/messaging/driver.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import socket, struct, sys, time
+ from logging import getLogger, DEBUG
+ from qpid import compat
+@@ -35,6 +36,8 @@
+ from qpid.util import URL, default,get_client_properties_with_defaults
+ from qpid.validator import And, Context, List, Map, Types, Values
+ from threading import Condition, Thread
++import six
++from six.moves import range
+ 
+ log = getLogger("qpid.messaging")
+ rawlog = getLogger("qpid.messaging.io.raw")
+@@ -163,9 +166,9 @@
+ 
+ DECLARE = Map({}, restricted=False)
+ BINDINGS = List(Map({
+-      "exchange": Types(basestring),
+-      "queue": Types(basestring),
+-      "key": Types(basestring),
++      "exchange": Types(six.string_types),
++      "queue": Types(six.string_types),
++      "key": Types(six.string_types),
+       "arguments": Map({}, restricted=False)
+       }))
+ 
+@@ -180,7 +183,7 @@
+       "x-bindings": BINDINGS
+       }),
+   "link": Map({
+-      "name": Types(basestring),
++      "name": Types(six.string_types),
+       "durable": Types(bool),
+       "reliability": RELIABILITY,
+       "x-declare": DECLARE,
+@@ -454,7 +457,7 @@
+         self._check_retry_ok()
+       else:
+         self.close_engine()
+-    except socket.error, e:
++    except socket.error as e:
+       self.close_engine(ConnectionError(text=str(e)))
+ 
+     self.update_status()
+@@ -519,7 +522,7 @@
+       if n == 0: return
+       sent = self.engine.read(n)
+       rawlog.debug("SENT[%s]: %r", self.log_id, sent)
+-    except socket.error, e:
++    except socket.error as e:
+       self.close_engine(e)
+       notify = True
+ 
+@@ -551,10 +554,10 @@
+           self.connect()
+       elif self.engine is not None:
+         self.engine.dispatch()
+-    except HeartbeatTimeout, e:
++    except HeartbeatTimeout as e:
+       log.warn("Heartbeat timeout")
+       self.close_engine(e)
+-    except ContentError, e:
++    except ContentError as e:
+       msg = compat.format_exc()
+       self.connection.error = ContentError(text=msg)
+     except:
+@@ -580,7 +583,7 @@
+       else:
+         raise ConnectError("no such transport: %s" % self.connection.transport)
+       self.schedule()
+-    except socket.error, e:
++    except socket.error as e:
+       self.close_engine(ConnectError(text=str(e)))
+ 
+ DEFAULT_DISPOSITION = Disposition(None)
+@@ -696,7 +699,7 @@
+         opslog.debug("RCVD[%s]: %r", self.log_id, op)
+         op.dispatch(self)
+       self.dispatch()
+-    except MessagingError, e:
++    except MessagingError as e:
+       self.close(e)
+     except:
+       self.close(InternalError(text=compat.format_exc()))
+@@ -759,7 +762,7 @@
+       mechs = start.mechanisms
+     try:
+       mech, initial = self._sasl.start(" ".join(mechs))
+-    except sasl.SASLError, e:
++    except sasl.SASLError as e:
+       if "ANONYMOUS" not in mechs and self.connection.username is None:
+         _text="Anonymous connections disabled, missing credentials"
+       else:
+@@ -820,7 +823,7 @@
+ 
+     if not sc.commands.empty():
+       while sst.min_completion in sc.commands:
+-        if sst.actions.has_key(sst.min_completion):
++        if sst.min_completion in sst.actions:
+           sst.actions.pop(sst.min_completion)()
+         sst.min_completion += 1
+ 
+@@ -894,8 +897,8 @@
+     if ssn.closed: return
+     sst = self._attachments.get(ssn)
+     if sst is None:
+-      for i in xrange(0, self.channel_max):
+-        if not self._sessions.has_key(i):
++      for i in range(0, self.channel_max):
++        if i not in self._sessions:
+           ch = i
+           break
+       else:
+@@ -995,9 +998,9 @@
+             xdeclare['auto-delete'] = "True"
+           if 'exclusive' not in xdeclare:
+             xdeclare['exclusive'] = "True"
+-      except address.LexError, e:
++      except address.LexError as e:
+         return MalformedAddress(text=str(e))
+-      except address.ParseError, e:
++      except address.ParseError as e:
+         return MalformedAddress(text=str(e))
+ 
+   def validate_options(self, lnk, dir):
+@@ -1365,11 +1368,11 @@
+     if msg.priority is not None:
+       dp.priority = msg.priority
+     if msg.ttl is not None:
+-      dp.ttl = long(msg.ttl*1000)
++      dp.ttl = int(msg.ttl*1000)
+     enc, dec = get_codec(msg.content_type)
+     try:
+       body = enc(msg.content)
+-    except AttributeError, e:
++    except AttributeError as e:
+       # convert to non-blocking EncodeError
+       raise EncodeError(e)
+ 
+@@ -1428,7 +1431,7 @@
+     enc, dec = get_codec(mp.content_type)
+     try:
+       content = dec(xfr.payload)
+-    except Exception, e:
++    except Exception as e:
+       raise DecodeError(e)
+     msg = Message(content)
+     msg.id = mp.message_id
+--- ./qpid/messaging/endpoints.py	(original)
++++ ./qpid/messaging/endpoints.py	(refactored)
+@@ -28,6 +28,7 @@
+   - protocol negotiation/multiprotocol impl
+ """
+ 
++from __future__ import absolute_import
+ from logging import getLogger
+ from math import ceil
+ from qpid.codec010 import StringCodec
+@@ -39,6 +40,7 @@
+ from qpid.ops import PRIMITIVE
+ from qpid.util import default, URL
+ from threading import Thread, RLock
++import six
+ 
+ log = getLogger("qpid.messaging")
+ 
+@@ -180,7 +182,7 @@
+     for key in opt_keys:
+         setattr(self, key, None)
+     # Get values from options, check for invalid options
+-    for (key, value) in options.iteritems():
++    for (key, value) in six.iteritems(options):
+         if key in opt_keys:
+             setattr(self, key, value)
+         else:
+@@ -189,7 +191,7 @@
+     # Now handle items that need special treatment or have speical defaults:
+     if self.host:
+         url = default(url, self.host)
+-    if isinstance(url, basestring):
++    if isinstance(url, six.string_types):
+         url = URL(url)
+     self.host = url.host
+ 
+@@ -245,7 +247,7 @@
+     self._condition = Condition(self._lock)
+     self._waiter = Waiter(self._condition)
+     self._modcount = Serial(0)
+-    from driver import Driver
++    from .driver import Driver
+     self._driver = Driver(self)
+ 
+   def _wait(self, predicate, timeout=None):
+@@ -298,7 +300,7 @@
+     else:
+       name = "%s:%s" % (self.id, name)
+ 
+-    if self.sessions.has_key(name):
++    if name in self.sessions:
+       return self.sessions[name]
+     else:
+       ssn = Session(self, name, transactional)
+@@ -671,7 +673,7 @@
+       self._wakeup()
+       try:
+         sender._ewait(lambda: sender.linked)
+-      except LinkError, e:
++      except LinkError as e:
+         sender.close()
+         raise e
+     return sender
+@@ -695,7 +697,7 @@
+       self._wakeup()
+       try:
+         receiver._ewait(lambda: receiver.linked)
+-      except LinkError, e:
++      except LinkError as e:
+         receiver.close()
+         raise e
+     return receiver
+@@ -825,7 +827,7 @@
+         raise Timeout("commit timed out")
+     except TransactionError:
+       raise
+-    except Exception, e:
++    except Exception as e:
+       self.error = TransactionAborted(text="Transaction aborted: %s"%e)
+       raise self.error
+     if self.aborted:
+--- ./qpid/messaging/message.py	(original)
++++ ./qpid/messaging/message.py	(refactored)
+@@ -17,8 +17,10 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.codec010 import StringCodec
+ from qpid.ops import PRIMITIVE
++import six
+ 
+ def codec(name):
+   type = PRIMITIVE[name]
+@@ -40,8 +42,8 @@
+ TYPE_MAPPINGS={
+   dict: "amqp/map",
+   list: "amqp/list",
+-  unicode: "text/plain; charset=utf8",
+-  unicode: "text/plain",
++  six.text_type: "text/plain; charset=utf8",
++  six.text_type: "text/plain",
+   buffer: None,
+   str: None,
+   None.__class__: None
+--- ./qpid/messaging/transports.py	(original)
++++ ./qpid/messaging/transports.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import socket
+ from qpid.util import connect
+ 
+@@ -149,7 +150,7 @@
+         n = self.tls.write( self.write_retry )
+         self.write_retry = None
+         return n
+-      except SSLError, e:
++      except SSLError as e:
+         if self._update_state(e.args[0]):
+           # will retry on next invokation
+           return 0
+@@ -163,7 +164,7 @@
+       self._clear_state()
+       try:
+         return self.tls.read(n)
+-      except SSLError, e:
++      except SSLError as e:
+         if self._update_state(e.args[0]):
+           # will retry later:
+           return None
+--- ./qpid/messaging/util.py	(original)
++++ ./qpid/messaging/util.py	(refactored)
+@@ -21,6 +21,7 @@
+ Add-on utilities for the L{qpid.messaging} API.
+ """
+ 
++from __future__ import absolute_import
+ from qpid.messaging import *
+ from logging import getLogger
+ from threading import Thread
+--- ./qpid/saslmech/amqplain.py	(original)
++++ ./qpid/saslmech/amqplain.py	(refactored)
+@@ -17,7 +17,8 @@
+ # under the License.
+ #
+ 
+-from sasl import Sasl
++from __future__ import absolute_import
++from .sasl import Sasl
+ 
+ class AMQPLAIN(Sasl):
+ 
+--- ./qpid/saslmech/anonymous.py	(original)
++++ ./qpid/saslmech/anonymous.py	(refactored)
+@@ -17,7 +17,8 @@
+ # under the License.
+ #
+ 
+-from sasl import Sasl
++from __future__ import absolute_import
++from .sasl import Sasl
+ 
+ class ANONYMOUS(Sasl):
+ 
+--- ./qpid/saslmech/cram_md5.py	(original)
++++ ./qpid/saslmech/cram_md5.py	(refactored)
+@@ -17,7 +17,8 @@
+ # under the License.
+ #
+ 
+-from sasl import Sasl
++from __future__ import absolute_import
++from .sasl import Sasl
+ from hmac import HMAC
+ 
+ class CRAM_MD5(Sasl):
+--- ./qpid/saslmech/cram_md5_hex.py	(original)
++++ ./qpid/saslmech/cram_md5_hex.py	(refactored)
+@@ -17,7 +17,8 @@
+ # under the License.
+ #
+ 
+-from sasl import Sasl
++from __future__ import absolute_import
++from .sasl import Sasl
+ from hmac import HMAC
+ from hashlib import md5
+ 
+--- ./qpid/saslmech/external.py	(original)
++++ ./qpid/saslmech/external.py	(refactored)
+@@ -17,7 +17,8 @@
+ # under the License.
+ #
+ 
+-from sasl import Sasl
++from __future__ import absolute_import
++from .sasl import Sasl
+ 
+ 
+ class EXTERNAL(Sasl):
+--- ./qpid/saslmech/finder.py	(original)
++++ ./qpid/saslmech/finder.py	(refactored)
+@@ -18,6 +18,7 @@
+ #
+ 
+ 
++from __future__ import absolute_import
+ from logging import getLogger
+ 
+ log = getLogger("qpid.saslmech")
+@@ -41,7 +42,7 @@
+         instances.append(instance)
+       else:
+         log.debug("SASL mechanism %s unavailable as the prerequistes for this mechanism have not been met", mechanismName)
+-    except (ImportError, AttributeError), e:
++    except (ImportError, AttributeError) as e:
+       # Unknown mechanism - this is normal if the server supports mechanism that the client does not
+       log.debug("Could not load implementation for %s", canonicalName)
+       pass
+--- ./qpid/saslmech/plain.py	(original)
++++ ./qpid/saslmech/plain.py	(refactored)
+@@ -17,7 +17,8 @@
+ # under the License.
+ #
+ 
+-from sasl import Sasl
++from __future__ import absolute_import
++from .sasl import Sasl
+ 
+ class PLAIN(Sasl):
+ 
+--- ./qpid/saslmech/scram.py	(original)
++++ ./qpid/saslmech/scram.py	(refactored)
+@@ -17,11 +17,14 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from hmac import HMAC
+ from binascii import b2a_hex
+-from sasl import Sasl
++from .sasl import Sasl
+ import os
+ import base64
++from six.moves import range
++from six.moves import zip
+ 
+ class SCRAM_base(Sasl):
+ 
+--- ./qpid/saslmech/scram_sha_1.py	(original)
++++ ./qpid/saslmech/scram_sha_1.py	(refactored)
+@@ -17,7 +17,8 @@
+ # under the License.
+ #
+ 
+-from scram import SCRAM_base
++from __future__ import absolute_import
++from .scram import SCRAM_base
+ from hashlib import sha1
+ 
+ class SCRAM_SHA_1(SCRAM_base):
+--- ./qpid/saslmech/scram_sha_256.py	(original)
++++ ./qpid/saslmech/scram_sha_256.py	(refactored)
+@@ -17,7 +17,8 @@
+ # under the License.
+ #
+ 
+-from scram import SCRAM_base
++from __future__ import absolute_import
++from .scram import SCRAM_base
+ import hashlib
+ 
+ class SCRAM_SHA_256(SCRAM_base):
+--- ./qpid/tests/__init__.py	(original)
++++ ./qpid/tests/__init__.py	(refactored)
+@@ -17,6 +17,8 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ class Test:
+ 
+   def __init__(self, name):
+@@ -43,14 +45,14 @@
+ class TestTestsXXX(Test):
+ 
+   def testFoo(self):
+-    print "this test has output"
++    print("this test has output")
+ 
+   def testBar(self):
+-    print "this test "*8
+-    print "has"*10
+-    print "a"*75
+-    print "lot of"*10
+-    print "output"*10
++    print("this test "*8)
++    print("has"*10)
++    print("a"*75)
++    print("lot of"*10)
++    print("output"*10)
+ 
+   def testQux(self):
+     import sys
+--- ./qpid/tests/codec.py	(original)
++++ ./qpid/tests/codec.py	(refactored)
+@@ -18,11 +18,14 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ import unittest
+ from qpid.codec import Codec
+ from qpid.spec08 import load
+ from cStringIO import StringIO
+ from qpid.reference import ReferenceId
++from six.moves import range
+ 
+ __doc__ = """
+ 
+@@ -553,7 +556,7 @@
+     # Test resolving above the max signed 32bit integer value of 2^31 -1
+     # As above except use an explicitly cast python long
+     def test_resolve_long_above_signed_32bit_max(self):
+-        value = 2147483648L #2^31, i.e 1 above the 32bit signed max
++        value = 2147483648 #2^31, i.e 1 above the 32bit signed max
+         expected = "signed_long"
+         resolved = self.codec.resolve(value.__class__, value)
+         self.failUnlessEqual(resolved, expected, "resolve FAILED...expected %s got %s" % (expected, resolved))
+@@ -561,7 +564,7 @@
+     # Test resolving an explicitly cast python long of value 1, i.e less than the max signed 32bit integer value
+     # Should be encoded as a 32bit signed int on the wire
+     def test_resolve_long_1(self):
+-        value = 1L
++        value = 1
+         expected = "signed_int"
+         resolved = self.codec.resolve(value.__class__, value)
+         self.failUnlessEqual(resolved, expected, "resolve FAILED...expected %s got %s" % (expected, resolved))
+@@ -585,13 +588,13 @@
+     # Test resolving a value of 2^63, i.e more than the max a signed 64bit integer value can hold.
+     # Should throw an exception indicating the value can't be encoded.
+     def test_resolve_above_64bit_signed_max(self):
+-        value = 9223372036854775808L #2^63
++        value = 9223372036854775808 #2^63
+         self.failUnlessRaises(Exception, self.codec.resolve, value.__class__, value)
+     # -------------------
+     # Test resolving a value of -2^63 -1, i.e less than the min a signed 64bit integer value can hold.
+     # Should throw an exception indicating the value can't be encoded.
+     def test_resolve_below_64bit_signed_min(self):
+-        value = 9223372036854775808L # -2^63 -1
++        value = 9223372036854775808 # -2^63 -1
+         self.failUnlessRaises(Exception, self.codec.resolve, value.__class__, value)
+     # -------------------
+     # Test resolving a float. Should indicate use of double as python uses 64bit floats
+@@ -636,7 +639,7 @@
+     enc = stream.getvalue()
+     stream.reset()
+     dup = []
+-    for i in xrange(len(values)):
++    for i in range(len(values)):
+       dup.append(codec.decode(type))
+     if values != dup:
+       raise AssertionError("%r --> %r --> %r" % (values, enc, dup))
+@@ -656,7 +659,7 @@
+     """
+     for value in ("1", "0", "110", "011", "11001", "10101", "10011"):
+       for i in range(10):
+-        dotest("bit", map(lambda x: x == "1", value*i))
++        dotest("bit", [x == "1" for x in value*i])
+ 
+     for value in ({}, {"asdf": "fdsa", "fdsa": 1, "three": 3}, {"one": 1}):
+       dotest("table", value)
+@@ -704,25 +707,25 @@
+     test_runner = unittest.TextTestRunner(run_output_stream, '', '')
+     test_result = test_runner.run(codec_test_suite)
+ 
+-    print '\n%d test run...' % (test_result.testsRun)
++    print('\n%d test run...' % (test_result.testsRun))
+ 
+     if test_result.wasSuccessful():
+-        print '\nAll tests successful\n'
++        print('\nAll tests successful\n')
+ 
+     if test_result.failures:
+-        print '\n----------'
+-        print '%d FAILURES:' % (len(test_result.failures))
+-        print '----------\n'
++        print('\n----------')
++        print('%d FAILURES:' % (len(test_result.failures)))
++        print('----------\n')
+         for failure in test_result.failures:
+-            print str(failure[0]) + ' ... FAIL'
++            print(str(failure[0]) + ' ... FAIL')
+ 
+     if test_result.errors:
+-        print '\n---------'
+-        print '%d ERRORS:' % (len(test_result.errors))
+-        print '---------\n'
++        print('\n---------')
++        print('%d ERRORS:' % (len(test_result.errors)))
++        print('---------\n')
+ 
+         for error in test_result.errors:
+-            print str(error[0]) + ' ... ERROR'
++            print(str(error[0]) + ' ... ERROR')
+ 
+     f = open('codec_unit_test_output.txt', 'w')
+     f.write(str(run_output_stream.getvalue()))
+--- ./qpid/tests/codec010.py	(original)
++++ ./qpid/tests/codec010.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import time
+ 
+ from unittest import TestCase
+@@ -130,4 +131,4 @@
+ 
+   def testDatetime(self):
+     self.check("datetime", timestamp(0))
+-    self.check("datetime", timestamp(long(time.time())))
++    self.check("datetime", timestamp(int(time.time())))
+--- ./qpid/tests/connection.py	(original)
++++ ./qpid/tests/connection.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import time
+ from threading import *
+ from unittest import TestCase
+@@ -27,6 +28,7 @@
+ from qpid.queue import Queue
+ from qpid.session import Delegate
+ from qpid.ops import QueueQueryResult
++from six.moves import range
+ 
+ PORT = 1234
+ 
+@@ -109,25 +111,25 @@
+     assert ssn2 == c.sessions["test2"]
+     assert ssn1.channel != None
+     assert ssn2.channel != None
+-    assert ssn1 in c.attached.values()
+-    assert ssn2 in c.attached.values()
++    assert ssn1 in list(c.attached.values())
++    assert ssn2 in list(c.attached.values())
+ 
+     ssn1.close(5)
+ 
+     assert ssn1.channel == None
+-    assert ssn1 not in c.attached.values()
+-    assert ssn2 in c.sessions.values()
++    assert ssn1 not in list(c.attached.values())
++    assert ssn2 in list(c.sessions.values())
+ 
+     ssn2.close(5)
+ 
+     assert ssn2.channel == None
+-    assert ssn2 not in c.attached.values()
+-    assert ssn2 not in c.sessions.values()
++    assert ssn2 not in list(c.attached.values())
++    assert ssn2 not in list(c.sessions.values())
+ 
+     ssn = c.session("session", timeout=10)
+ 
+     assert ssn.channel != None
+-    assert ssn in c.sessions.values()
++    assert ssn in list(c.sessions.values())
+ 
+     destinations = ("one", "two", "three")
+ 
+@@ -170,7 +172,7 @@
+     try:
+       m = echos.get(timeout=10)
+       assert False
+-    except Closed, e:
++    except Closed as e:
+       pass
+ 
+   def testCloseListen(self):
+--- ./qpid/tests/datatypes.py	(original)
++++ ./qpid/tests/datatypes.py	(refactored)
+@@ -17,23 +17,25 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from unittest import TestCase
+ from qpid.datatypes import *
+ from qpid.ops import DeliveryProperties, FragmentProperties, MessageProperties
++from six.moves import range
+ 
+ class SerialTest(TestCase):
+ 
+   def test(self):
+-    for s in (serial(0), serial(0x8FFFFFFFL), serial(0xFFFFFFFFL)):
++    for s in (serial(0), serial(0x8FFFFFFF), serial(0xFFFFFFFF)):
+       assert s + 1 > s
+       assert s - 1 < s
+       assert s < s + 1
+       assert s > s - 1
+ 
+-    assert serial(0xFFFFFFFFL) + 1 == serial(0)
+-
+-    assert min(serial(0xFFFFFFFFL), serial(0x0)) == serial(0xFFFFFFFFL)
+-    assert max(serial(0xFFFFFFFFL), serial(0x0)) == serial(0x0)
++    assert serial(0xFFFFFFFF) + 1 == serial(0)
++
++    assert min(serial(0xFFFFFFFF), serial(0x0)) == serial(0xFFFFFFFF)
++    assert max(serial(0xFFFFFFFF), serial(0x0)) == serial(0x0)
+ 
+   def testIncr(self):
+     s = serial(0)
+@@ -43,7 +45,7 @@
+   def testIn(self):
+     l = [serial(1), serial(2), serial(3), serial(4)]
+     assert serial(1) in l
+-    assert serial(0xFFFFFFFFL + 2) in l
++    assert serial(0xFFFFFFFF + 2) in l
+     assert 4 in l
+ 
+   def testNone(self):
+@@ -60,7 +62,7 @@
+ 
+   def testSub(self):
+     delta = serial(4) - serial(2)
+-    assert isinstance(delta, int) or isinstance(delta, long)
++    assert isinstance(delta, int) or isinstance(delta, int)
+     assert delta == 2
+ 
+     delta = serial(4) - 2
+@@ -210,7 +212,7 @@
+     # this test is kind of lame, but it does excercise the basic
+     # functionality of the class
+     u = uuid4()
+-    for i in xrange(1024):
++    for i in range(1024):
+       assert u != uuid4()
+ 
+ class MessageTest(TestCase):
+--- ./qpid/tests/framing.py	(original)
++++ ./qpid/tests/framing.py	(refactored)
+@@ -20,8 +20,11 @@
+ # setup, usage, teardown, errors(sync), errors(async), stress, soak,
+ # boundary-conditions, config
+ 
++from __future__ import absolute_import
+ from qpid.tests import Test
+ from qpid.framing import *
++from six.moves import range
++from six.moves import zip
+ 
+ class Base(Test):
+ 
+@@ -65,7 +68,7 @@
+     for f in cls.FIELDS:
+       v1 = getattr(op1, f.name)
+       v2 = getattr(op2, f.name)
+-      if COMPOUND.has_key(f.type) or f.type == "struct32":
++      if f.type in COMPOUND or f.type == "struct32":
+         self.cmp_ops(v1, v2)
+       elif f.type in ("list", "array"):
+         self.cmp_list(v1, v2)
+--- ./qpid/tests/mimetype.py	(original)
++++ ./qpid/tests/mimetype.py	(refactored)
+@@ -17,9 +17,10 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.tests import Test
+ from qpid.mimetype import lex, parse, ParseError, EOF, WSPACE
+-from parser import ParserBase
++from .parser import ParserBase
+ 
+ class MimeTypeTests(ParserBase, Test):
+ 
+--- ./qpid/tests/parser.py	(original)
++++ ./qpid/tests/parser.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.parser import ParseError
+ 
+ class ParserBase:
+@@ -33,5 +34,5 @@
+     try:
+       p = self.do_parse(addr)
+       assert False, "invalid address parsed: %s" % p
+-    except ParseError, e:
++    except ParseError as e:
+       assert error == str(e), "expected %r, got %r" % (error, str(e))
+--- ./qpid/tests/queue.py	(original)
++++ ./qpid/tests/queue.py	(refactored)
+@@ -18,9 +18,11 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ import threading, time
+ from unittest import TestCase
+ from qpid.queue import Queue, Empty, Closed
++from six.moves import range
+ 
+ 
+ class QueueTest (TestCase):
+--- ./qpid/tests/spec010.py	(original)
++++ ./qpid/tests/spec010.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import os, tempfile, shutil, stat
+ from unittest import TestCase
+ from qpid.codec010 import Codec, StringCodec
+@@ -40,7 +41,7 @@
+     return decoded
+ 
+   def testMessageProperties(self):
+-    props = MessageProperties(content_length=3735928559L,
++    props = MessageProperties(content_length=3735928559,
+                               reply_to=ReplyTo(exchange="the exchange name",
+                                                routing_key="the routing key"))
+     dec = self.encdec(props)
+--- ./qpid/tests/util.py	(original)
++++ ./qpid/tests/util.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from unittest import TestCase
+ from qpid.util import get_client_properties_with_defaults
+ 
+--- ./qpid/tests/messaging/__init__.py	(original)
++++ ./qpid/tests/messaging/__init__.py	(refactored)
+@@ -17,12 +17,14 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ import time
+ from math import ceil
+ from qpid.harness import Skipped
+ from qpid.tests.messaging.implementation import *
+ from qpid.tests import Test
+ from qpid.util import URL
++from six.moves import zip
+ 
+ class Base(Test):
+ 
+@@ -47,7 +49,7 @@
+ 
+     try:
+       self.conn = self.setup_connection()
+-    except ConnectError, e:
++    except ConnectError as e:
+       raise Skipped(e)
+     self.ssn = self.setup_session()
+     self.snd = self.setup_sender()
+@@ -125,7 +127,7 @@
+       if redelivered:
+         assert echo.redelivered, \
+             "expected %s to be redelivered: %s" % (msg, echo)
+-        if delta.has_key("redelivered"):
++        if "redelivered" in delta:
+           del delta["redelivered"]
+       assert mttl is not None and ettl is not None, "%s, %s" % (mttl, ettl)
+       assert mttl >= ettl, "%s, %s" % (mttl, ettl)
+@@ -233,4 +235,4 @@
+       s += ":%s" % self.port
+     return s
+ 
+-import address, endpoints, message, selector
++from . import address, endpoints, message, selector
+--- ./qpid/tests/messaging/address.py	(original)
++++ ./qpid/tests/messaging/address.py	(refactored)
+@@ -18,12 +18,14 @@
+ #
+ 
+ 
++from __future__ import absolute_import
+ from qpid.tests import Test
+ from qpid.messaging.address import lex, parse, ParseError, EOF, ID, NUMBER, \
+     SYM, WSPACE, LEXER
+ from qpid.lexer import Token
+ from qpid.harness import Skipped
+ from qpid.tests.parser import ParserBase
++import six
+ 
+ def indent(st):
+   return "  " + st.replace("\n", "\n  ")
+@@ -37,7 +39,7 @@
+     return pprint_map(o)
+   elif isinstance(o, list):
+     return pprint_list(o)
+-  elif isinstance(o, basestring):
++  elif isinstance(o, six.string_types):
+     return pprint_string(o)
+   else:
+     return repr(o)
+@@ -83,9 +85,9 @@
+     try:
+       from subprocess import Popen, PIPE, STDOUT
+       po = Popen([parser, mode], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+-    except ImportError, e:
++    except ImportError as e:
+       raise Skipped("%s" % e)
+-    except OSError, e:
++    except OSError as e:
+       raise Skipped("%s: %s" % (e, parser))
+     out, _ = po.communicate(input=input)
+     return out
+--- ./qpid/tests/messaging/endpoints.py	(original)
++++ ./qpid/tests/messaging/endpoints.py	(refactored)
+@@ -20,6 +20,7 @@
+ # setup, usage, teardown, errors(sync), errors(async), stress, soak,
+ # boundary-conditions, config
+ 
++from __future__ import absolute_import
+ import errno, os, socket, sys, time
+ from qpid import compat
+ from qpid.compat import set
+@@ -27,6 +28,8 @@
+ from qpid.messaging.transports import TRANSPORTS
+ from qpid.tests.messaging import Base
+ from threading import Thread
++from six.moves import range
++from six.moves import zip
+ 
+ class SetupTests(Base):
+ 
+@@ -55,7 +58,7 @@
+       # Specifying port 0 yields a bad address on Windows; port 4 is unassigned
+       self.conn = Connection.establish("localhost:4")
+       assert False, "connect succeeded"
+-    except ConnectError, e:
++    except ConnectError as e:
+       assert "refused" in str(e)
+ 
+   def testGetError(self):
+@@ -63,7 +66,7 @@
+     try:
+       self.conn.open()
+       assert False, "connect succeeded"
+-    except ConnectError, e:
++    except ConnectError as e:
+       assert self.conn.get_error() == e
+ 
+   def use_fds(self):
+@@ -71,7 +74,7 @@
+     try:
+       while True:
+         fds.append(os.open(getattr(os, "devnull", "/dev/null"), os.O_RDONLY))
+-    except OSError, e:
++    except OSError as e:
+       if e.errno != errno.EMFILE:
+         raise e
+       else:
+@@ -82,7 +85,7 @@
+     try:
+       for i in range(32):
+         if fds: os.close(fds.pop())
+-      for i in xrange(64):
++      for i in range(64):
+         conn = Connection.establish(self.broker, **self.connection_options())
+         conn.close()
+     finally:
+@@ -94,7 +97,7 @@
+     try:
+       for i in range(32):
+         if fds: os.close(fds.pop())
+-      for i in xrange(64):
++      for i in range(64):
+         conn = Connection("localhost:0", **self.connection_options())
+         # XXX: we need to force a waiter to be created for this test
+         # to work
+@@ -103,7 +106,7 @@
+         conn._lock.release()
+         try:
+           conn.open()
+-        except ConnectError, e:
++        except ConnectError as e:
+           pass
+     finally:
+       while fds:
+@@ -738,9 +741,9 @@
+     try:
+       msg = self.rcv.fetch(0)
+       assert False, "unexpected result: %s" % msg
+-    except Empty, e:
++    except Empty as e:
+       assert False, "unexpected exception: %s" % e
+-    except LinkClosed, e:
++    except LinkClosed as e:
+       pass
+ 
+   def testFetchFromClosedReceiver(self):
+@@ -761,9 +764,9 @@
+     try:
+       msg = self.rcv.fetch()
+       assert False, "unexpected result: %s" % msg
+-    except Empty, e:
++    except Empty as e:
+       assert False, "unexpected exception: %s" % e
+-    except LinkClosed, e:
++    except LinkClosed as e:
+       pass
+     t.join()
+ 
+@@ -971,13 +974,13 @@
+     try:
+       self.ssn.sender("test-bad-options-snd; %s" % options)
+       assert False
+-    except InvalidOption, e:
++    except InvalidOption as e:
+       assert "error in options: %s" % error == str(e), e
+ 
+     try:
+       self.ssn.receiver("test-bad-options-rcv; %s" % options)
+       assert False
+-    except InvalidOption, e:
++    except InvalidOption as e:
+       assert "error in options: %s" % error == str(e), e
+ 
+   def testIllegalKey(self):
+@@ -1054,7 +1057,7 @@
+     snd.close()
+     try:
+       self.ssn.sender("test-delete")
+-    except NotFound, e:
++    except NotFound as e:
+       assert "no such queue" in str(e)
+ 
+   def testDeleteByReceiver(self):
+@@ -1068,7 +1071,7 @@
+     try:
+       self.ssn.receiver("test-delete")
+       assert False
+-    except NotFound, e:
++    except NotFound as e:
+       assert "no such queue" in str(e)
+ 
+   def testDeleteSpecial(self):
+@@ -1077,7 +1080,7 @@
+     try:
+       snd.close()
+       assert False, "successfully deleted amq.topic"
+-    except SessionError, e:
++    except SessionError as e:
+       assert e.code == 530
+     # XXX: need to figure out close after error
+     self.conn._remove_session(self.ssn)
+@@ -1230,9 +1233,9 @@
+     try:
+       snd = self.ssn.sender("amq.topic; {assert: always, node: {type: queue}}")
+       assert 0, "assertion failed to trigger"
+-    except AssertionFailed, e:
++    except AssertionFailed as e:
+       pass
+-    except NotFound, e:  # queue named amp.topic not found
++    except NotFound as e:  # queue named amp.topic not found
+       pass
+ 
+   def testAssert2(self):
+@@ -1254,14 +1257,14 @@
+     try:
+       self.ssn.sender(addr, durable=self.durable())
+       assert False, "sender creation succeeded"
+-    except exc, e:
++    except exc as e:
+       assert check(e), "unexpected error: %s" % compat.format_exc(e)
+ 
+   def receiverErrorTest(self, addr, exc, check=lambda e: True):
+     try:
+       self.ssn.receiver(addr)
+       assert False, "receiver creation succeeded"
+-    except exc, e:
++    except exc as e:
+       assert check(e), "unexpected error: %s" % compat.format_exc(e)
+ 
+   def testNoneTarget(self):
+--- ./qpid/tests/messaging/implementation.py	(original)
++++ ./qpid/tests/messaging/implementation.py	(refactored)
+@@ -16,13 +16,15 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
++from __future__ import print_function
+ import os
+ if 'QPID_USE_SWIG_CLIENT' in os.environ and os.environ['QPID_USE_SWIG_CLIENT']:
+   try:
+     from qpid_messaging import *
+     from qpid.datatypes import uuid4
+-  except ImportError, e:
+-    print "Swigged client not found. Falling back to pure bindings, %s\n" % e
++  except ImportError as e:
++    print("Swigged client not found. Falling back to pure bindings, %s\n" % e)
+     from qpid.messaging import *
+ else:
+   from qpid.messaging import *
+--- ./qpid/tests/messaging/message.py	(original)
++++ ./qpid/tests/messaging/message.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.tests.messaging.implementation import *
+ from qpid.messaging.address import parse
+ from qpid.tests.messaging import Base
+@@ -179,7 +180,7 @@
+       self.snd.send(msg)
+       self.rcv.fetch(0)
+       assert False, "Exception not raised on mismatched content/content_type"
+-    except Exception, e:
++    except Exception as e:
+       pass
+ 
+   def testRecoverAfterException(self):
+--- ./qpid/tests/messaging/selector.py	(original)
++++ ./qpid/tests/messaging/selector.py	(refactored)
+@@ -17,6 +17,8 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ import sys, os
+ from logging import getLogger
+ from unittest import TestCase
+@@ -67,8 +69,8 @@
+         self.assertRaises(InternalError, c.session) # But can't use parent connection
+         s.send("child")
+         os._exit(0)
+-      except Exception, e:
+-        print >>sys.stderr, "test child process error: %s" % e
++      except Exception as e:
++        print("test child process error: %s" % e, file=sys.stderr)
+         os.exit(1)
+       finally:
+         os._exit(1)             # Hard exit from child to stop remaining tests running twice
+--- ./qpid/tests/saslmech/finder.py	(original)
++++ ./qpid/tests/saslmech/finder.py	(refactored)
+@@ -17,10 +17,11 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from unittest import TestCase
+ from qpid.saslmech.finder import get_sasl_mechanism
+-from my_sasl import MY_SASL
+-from my_sasl2 import MY_SASL2
++from .my_sasl import MY_SASL
++from .my_sasl2 import MY_SASL2
+ 
+ class SaslFinderTests (TestCase):
+   """Tests the ability to chose the a sasl mechanism from those available to be loaded"""
+--- ./qpid/tests/saslmech/my_sasl.py	(original)
++++ ./qpid/tests/saslmech/my_sasl.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.saslmech.sasl import Sasl
+ 
+ class MY_SASL(Sasl): pass
+--- ./qpid/tests/saslmech/my_sasl2.py	(original)
++++ ./qpid/tests/saslmech/my_sasl2.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.saslmech.sasl import Sasl
+ 
+ class MY_SASL2(Sasl):
+--- ./qpid_tests/__init__.py	(original)
++++ ./qpid_tests/__init__.py	(refactored)
+@@ -19,4 +19,5 @@
+ # under the License.
+ #
+ 
+-import broker_1_0, broker_0_10, broker_0_9, broker_0_8
++from __future__ import absolute_import
++from . import broker_1_0, broker_0_10, broker_0_9, broker_0_8
+--- ./qpid_tests/broker_0_10/__init__.py	(original)
++++ ./qpid_tests/broker_0_10/__init__.py	(refactored)
+@@ -19,21 +19,22 @@
+ # under the License.
+ #
+ 
+-from alternate_exchange import *
+-from broker import *
+-from dtx import *
+-from example import *
+-from exchange import *
+-from management import *
+-from message import *
+-from query import *
+-from queue import *
+-from tx import *
+-from lvq import *
+-from priority import *
+-from threshold import *
+-from extensions import *
+-from msg_groups import *
+-from new_api import *
+-from stats import *
+-from qmf_events import *
++from __future__ import absolute_import
++from .alternate_exchange import *
++from .broker import *
++from .dtx import *
++from .example import *
++from .exchange import *
++from .management import *
++from .message import *
++from .query import *
++from .queue import *
++from .tx import *
++from .lvq import *
++from .priority import *
++from .threshold import *
++from .extensions import *
++from .msg_groups import *
++from .new_api import *
++from .stats import *
++from .qmf_events import *
+--- ./qpid_tests/broker_0_10/alternate_exchange.py	(original)
++++ ./qpid_tests/broker_0_10/alternate_exchange.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ import traceback
+ from qpid.queue import Empty
+ from qpid.datatypes import Message, RangedSet
+@@ -41,16 +42,16 @@
+         session.queue_declare(queue="returns", exclusive=True, auto_delete=True)
+         session.exchange_bind(queue="returns", exchange="secondary")
+         session.message_subscribe(destination="a", queue="returns")
+-        session.message_flow(destination="a", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="a", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="a", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="a", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         returned = session.incoming("a")
+ 
+         #declare, bind (to the primary exchange) and consume from a queue for 'processed' messages
+         session.queue_declare(queue="processed", exclusive=True, auto_delete=True)
+         session.exchange_bind(queue="processed", exchange="primary", binding_key="my-key")
+         session.message_subscribe(destination="b", queue="processed")
+-        session.message_flow(destination="b", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="b", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="b", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="b", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         processed = session.incoming("b")
+ 
+         #publish to the primary exchange
+@@ -110,7 +111,7 @@
+         try:
+             session2.exchange_delete(exchange="alternate")
+             self.fail("Expected deletion of in-use alternate-exchange to fail")
+-        except SessionException, e:
++        except SessionException as e:
+             session = self.session
+             session.queue_delete(queue="q")
+             session.exchange_delete(exchange="alternate")
+@@ -130,7 +131,7 @@
+         try:
+             session.exchange_delete(exchange="alternate")
+             self.fail("Expected deletion of in-use alternate-exchange to fail")
+-        except SessionException, e:
++        except SessionException as e:
+             session = self.session
+             session.exchange_delete(exchange="e")
+             session.exchange_delete(exchange="alternate")
+@@ -150,7 +151,7 @@
+             # attempt to change the alternate on an already existing exchange
+             session.exchange_declare(exchange="onealternate", type="fanout", alternate_exchange="alt2")
+             self.fail("Expected changing an alternate on an existing exchange to fail")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(530, e.args[0].error_code)
+         session = self.conn.session("alternate", 2)
+         session.exchange_delete(exchange="onealternate")
+@@ -170,7 +171,7 @@
+             # attempt to add an alternate on an already existing exchange
+             session.exchange_declare(exchange="noalternate", type="fanout", alternate_exchange="alt1")
+             self.fail("Expected adding an alternate on an existing exchange to fail")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(530, e.args[0].error_code)
+         session = self.conn.session("alternate", 2)
+         session.exchange_delete(exchange="noalternate")
+@@ -202,8 +203,8 @@
+         session.queue_declare(queue="deleted", exclusive=True, auto_delete=True)
+         session.exchange_bind(exchange="dlq", queue="deleted")
+         session.message_subscribe(destination="dlq", queue="deleted")
+-        session.message_flow(destination="dlq", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="dlq", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="dlq", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="dlq", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         dlq = session.incoming("dlq")
+ 
+         #on a separate session, create an auto-deleted queue using the
+@@ -220,7 +221,7 @@
+             session2.message_transfer(message=Message(dp, "Three"))
+             session2.message_subscribe(destination="incoming", queue="my-queue")
+             session2.message_flow(destination="incoming", unit=session.credit_unit.message, value=1)
+-            session2.message_flow(destination="incoming", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++            session2.message_flow(destination="incoming", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+             self.assertEqual("One", session2.incoming("incoming").get(timeout=1).body)
+             session2.close()
+ 
+@@ -315,8 +316,8 @@
+ 
+         #get and reject those messages:
+         session.message_subscribe(destination="a", queue="delivery-queue")
+-        session.message_flow(destination="a", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="a", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="a", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="a", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         incoming = session.incoming("a")
+         for m in ["One", "Two", "Three"]:
+             msg = incoming.get(timeout=1)
+@@ -339,8 +340,8 @@
+         session.queue_declare(queue="deleted", exclusive=True, auto_delete=True)
+         session.exchange_bind(exchange="dlq", queue="deleted")
+         session.message_subscribe(destination="dlq", queue="deleted")
+-        session.message_flow(destination="dlq", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="dlq", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="dlq", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="dlq", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         dlq = session.incoming("dlq")
+         return dlq
+ 
+--- ./qpid_tests/broker_0_10/broker.py	(original)
++++ ./qpid_tests/broker_0_10/broker.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Closed
+ from qpid.queue import Empty
+ from qpid.testlib import TestBase010
+@@ -36,8 +37,8 @@
+         # No ack consumer
+         ctag = "tag1"
+         session.message_subscribe(queue = "myqueue", destination = ctag)
+-        session.message_flow(destination=ctag, unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination=ctag, unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination=ctag, unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination=ctag, unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         body = "test no-ack"
+         session.message_transfer(message=Message(session.delivery_properties(routing_key="myqueue"), body))
+         msg = session.incoming(ctag).get(timeout = 5)
+@@ -47,8 +48,8 @@
+         session.queue_declare(queue = "otherqueue", exclusive=True, auto_delete=True)
+         ctag = "tag2"
+         session.message_subscribe(queue = "otherqueue", destination = ctag, accept_mode = 1)
+-        session.message_flow(destination=ctag, unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination=ctag, unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination=ctag, unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination=ctag, unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         body = "test ack"
+         session.message_transfer(message=Message(session.delivery_properties(routing_key="otherqueue"), body))
+         msg = session.incoming(ctag).get(timeout = 5)
+@@ -64,8 +65,8 @@
+         session.exchange_bind(queue="test-queue", exchange="amq.fanout")
+         consumer_tag = "tag1"
+         session.message_subscribe(queue="test-queue", destination=consumer_tag)
+-        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFFL, destination = consumer_tag)
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = consumer_tag)
++        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFF, destination = consumer_tag)
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = consumer_tag)
+         queue = session.incoming(consumer_tag)
+ 
+         body = "Immediate Delivery"
+@@ -86,8 +87,8 @@
+ 
+         consumer_tag = "tag1"
+         session.message_subscribe(queue="test-queue", destination=consumer_tag)
+-        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFFL, destination = consumer_tag)
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = consumer_tag)
++        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFF, destination = consumer_tag)
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = consumer_tag)
+         queue = session.incoming(consumer_tag)
+         msg = queue.get(timeout=5)
+         self.assert_(msg.body == body)
+--- ./qpid_tests/broker_0_10/dtx.py	(original)
++++ ./qpid_tests/broker_0_10/dtx.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.datatypes import Message, RangedSet
+@@ -24,6 +25,7 @@
+ from qpid.compat import set
+ from struct import pack, unpack
+ from time import sleep
++from six.moves import range
+ 
+ class DtxTests(TestBase010):
+     """
+@@ -162,7 +164,7 @@
+             session.dtx_end(xid=tx)
+             session.dtx_rollback(xid=tx)
+             self.fail("Session not selected for use with dtx, expected exception!")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(503, e.args[0].error_code)
+ 
+     def test_start_already_known(self):
+@@ -187,7 +189,7 @@
+         failed = False
+         try:
+             session2.dtx_start(xid=tx)
+-        except SessionException, e:
++        except SessionException as e:
+             failed = True
+             error = e
+ 
+@@ -233,7 +235,7 @@
+             session.dtx_end(xid=tx)
+             session.dtx_rollback(xid=tx)
+             self.fail("Join and resume both set, expected exception!")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(503, e.args[0].error_code)
+ 
+     def test_start_join(self):
+@@ -353,7 +355,7 @@
+         try:
+             session.dtx_end(xid=tx, suspend=True, fail=True)
+             self.fail("Suspend and fail both set, expected exception!")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(503, e.args[0].error_code)
+ 
+         #cleanup
+@@ -376,7 +378,7 @@
+         try:
+             session.dtx_end(xid=tx)
+             self.fail("Attempted to end association with unknown xid, expected exception!")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(409, e.args[0].error_code)
+ 
+     def test_end(self):
+@@ -431,7 +433,7 @@
+         failed = False
+         try:
+             tester.dtx_commit(xid=tx, one_phase=True)
+-        except SessionException, e:
++        except SessionException as e:
+             failed = True
+             error = e
+ 
+@@ -459,7 +461,7 @@
+         failed = False
+         try:
+             tester.dtx_commit(xid=tx, one_phase=False)
+-        except SessionException, e:
++        except SessionException as e:
+             failed = True
+             error = e
+ 
+@@ -486,7 +488,7 @@
+         failed = False
+         try:
+             tester.dtx_commit(xid=tx, one_phase=False)
+-        except SessionException, e:
++        except SessionException as e:
+             failed = True
+             error = e
+ 
+@@ -514,7 +516,7 @@
+         failed = False
+         try:
+             tester.dtx_rollback(xid=tx)
+-        except SessionException, e:
++        except SessionException as e:
+             failed = True
+             error = e
+ 
+@@ -543,7 +545,7 @@
+         failed = False
+         try:
+             tester.dtx_prepare(xid=tx)
+-        except SessionException, e:
++        except SessionException as e:
+             failed = True
+             error = e
+ 
+@@ -574,7 +576,7 @@
+         session2.dtx_start(xid=tx)
+         session2.message_subscribe(queue="dummy", destination="dummy")
+         session2.message_flow(destination="dummy", unit=session2.credit_unit.message, value=1)
+-        session2.message_flow(destination="dummy", unit=session2.credit_unit.byte, value=0xFFFFFFFFL)
++        session2.message_flow(destination="dummy", unit=session2.credit_unit.byte, value=0xFFFFFFFF)
+         msg = session2.incoming("dummy").get(timeout=1)
+         session2.message_accept(RangedSet(msg.id))
+         session2.message_cancel(destination="dummy")
+@@ -641,7 +643,7 @@
+         session.dtx_start(xid=tx)
+         try:
+             session.dtx_set_timeout(xid=tx, timeout=3601)
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(542, e.args[0].error_code)
+ 
+ 
+@@ -690,35 +692,35 @@
+         session = self.session
+         try:
+             session.dtx_start(resume=True)
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(503, e.args[0].error_code)
+ 
+     def test_prepare_unknown(self):
+         session = self.session
+         try:
+             session.dtx_prepare(xid=self.xid("unknown"))
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+     def test_commit_unknown(self):
+         session = self.session
+         try:
+             session.dtx_commit(xid=self.xid("unknown"))
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+     def test_rollback_unknown(self):
+         session = self.session
+         try:
+             session.dtx_rollback(xid=self.xid("unknown"))
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+     def test_get_timeout_unknown(self):
+         session = self.session
+         try:
+             session.dtx_get_timeout(xid=self.xid("unknown"))
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+     def xid(self, txid):
+@@ -751,7 +753,7 @@
+         #consume from src:
+         session.message_subscribe(destination="temp-swap", queue=src)
+         session.message_flow(destination="temp-swap", unit=session.credit_unit.message, value=1)
+-        session.message_flow(destination="temp-swap", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="temp-swap", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         msg = session.incoming("temp-swap").get(timeout=1)
+         session.message_cancel(destination="temp-swap")
+         session.message_accept(RangedSet(msg.id))
+@@ -768,7 +770,7 @@
+     def assertMessageId(self, expected, queue):
+         self.session.message_subscribe(queue=queue, destination="results")
+         self.session.message_flow(destination="results", unit=self.session.credit_unit.message, value=1)
+-        self.session.message_flow(destination="results", unit=self.session.credit_unit.byte, value=0xFFFFFFFFL)
++        self.session.message_flow(destination="results", unit=self.session.credit_unit.byte, value=0xFFFFFFFF)
+         self.assertEqual(expected, self.getMessageProperty(self.session.incoming("results").get(timeout=1), 'correlation_id'))
+         self.session.message_cancel(destination="results")
+ 
+--- ./qpid_tests/broker_0_10/example.py	(original)
++++ ./qpid_tests/broker_0_10/example.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.datatypes import Message, RangedSet
+ from qpid.testlib import TestBase010
+ 
+@@ -69,8 +70,8 @@
+         # field that is filled if the reply includes content. In this case the
+         # interesting field is the consumer_tag.
+         session.message_subscribe(queue="test-queue", destination="consumer_tag")
+-        session.message_flow(destination="consumer_tag", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="consumer_tag", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="consumer_tag", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="consumer_tag", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+ 
+         # We can use the session.incoming(...) method to access the messages
+         # delivered for our consumer_tag.
+--- ./qpid_tests/broker_0_10/exchange.py	(original)
++++ ./qpid_tests/broker_0_10/exchange.py	(refactored)
+@@ -23,7 +23,9 @@
+ Test classes ending in 'RuleTests' are derived from rules in amqp.xml.
+ """
+ 
+-import Queue, logging, traceback
++from __future__ import absolute_import
++from __future__ import print_function
++import six.moves.queue, logging, traceback
+ from qpid.testlib import TestBase010
+ from qpid.datatypes import Message
+ from qpid.client import Closed
+@@ -46,8 +48,8 @@
+             for ssn, ex in self.exchanges:
+                 ssn.exchange_delete(exchange=ex)
+         except:
+-            print "Error on tearDown:"
+-            print traceback.print_exc()
++            print("Error on tearDown:")
++            print(traceback.print_exc())
+         TestBase010.tearDown(self)
+ 
+     def createMessage(self, key="", body=""):
+@@ -83,7 +85,7 @@
+         try:
+             queue.get(timeout=1)
+             self.fail("Queue is not empty.")
+-        except Queue.Empty: None              # Ignore
++        except six.moves.queue.Empty: None              # Ignore
+         
+     def queue_declare(self, session=None, *args, **keys):
+         session = session or self.session
+@@ -112,8 +114,8 @@
+         else: self.uniqueTag += 1
+         consumer_tag = "tag" + str(self.uniqueTag)
+         self.session.message_subscribe(queue=queueName, destination=consumer_tag)
+-        self.session.message_flow(destination=consumer_tag, unit=self.session.credit_unit.message, value=0xFFFFFFFFL)
+-        self.session.message_flow(destination=consumer_tag, unit=self.session.credit_unit.byte, value=0xFFFFFFFFL)
++        self.session.message_flow(destination=consumer_tag, unit=self.session.credit_unit.message, value=0xFFFFFFFF)
++        self.session.message_flow(destination=consumer_tag, unit=self.session.credit_unit.byte, value=0xFFFFFFFF)
+         self.subscriptions.append(consumer_tag)
+         return self.session.incoming(consumer_tag)
+ 
+@@ -132,7 +134,7 @@
+             try:
+                 self.assertPublishConsume(exchange=ex, queue="q", routing_key="kk")
+                 self.fail("Expected Empty exception")
+-            except Queue.Empty: None # Expected
++            except six.moves.queue.Empty: None # Expected
+         finally:
+             if unbind:
+                 self.session.exchange_unbind(queue="q", exchange=ex, binding_key="k")
+@@ -299,7 +301,7 @@
+         try:
+             self.session.exchange_declare(exchange=reservedString, type=exchangeType)
+             self.fail("Expected not allowed error (530) for exchanges starting with \"" + reservedString + "\".")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(e.args[0].error_code, 530)
+         # connection closed, reopen it
+         self.tearDown()
+@@ -307,7 +309,7 @@
+         try:
+             self.session.exchange_declare(exchange=reservedString + "abc123", type=exchangeType)
+             self.fail("Expected not allowed error (530) for exchanges starting with \"" + reservedString + "\".")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(e.args[0].error_code, 530)
+         # connection closed, reopen it
+         self.tearDown()
+@@ -363,7 +365,7 @@
+         try:
+             self.session.exchange_declare(exchange="humpty_dumpty", passive=True)
+             self.fail("Expected 404 for passive declaration of unknown exchange.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+ 
+@@ -472,7 +474,7 @@
+         try:
+             self.session.exchange_declare(exchange="test_type_not_known_exchange", type="invalid_type")
+             self.fail("Expected 404 for declaration of unknown exchange type.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+     def testDifferentDeclaredType(self):
+@@ -481,7 +483,7 @@
+             session = self.conn.session("alternate", 2)
+             session.exchange_declare(exchange="test_different_declared_type_exchange", type="topic")
+             self.fail("Expected 530 for redeclaration of exchange with different type.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(530, e.args[0].error_code)
+ 
+     def testReservedExchangeRedeclaredSameType(self):
+@@ -491,7 +493,7 @@
+         try:
+             self.exchange_declare(exchange="amq.direct", type="topic")
+             self.fail("Expected 530 for redeclaration of exchange with different type.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(530, e.args[0].error_code)
+ 
+     def testDefaultAccessBind(self):
+@@ -499,7 +501,7 @@
+             self.session.queue_declare(queue="my-queue", auto_delete=True, exclusive=True)
+             self.session.exchange_bind(exchange="", queue="my-queue", binding_key="another-key")
+             self.fail("Expected 542 (invalid-argument) code for bind to default exchange.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(542, e.args[0].error_code)
+ 
+     def testDefaultAccessUnbind(self):
+@@ -507,14 +509,14 @@
+             self.session.queue_declare(queue="my-queue", auto_delete=True, exclusive=True)
+             self.session.exchange_unbind(exchange="", queue="my-queue", binding_key="my-queue")
+             self.fail("Expected 542 (invalid-argument) code for unbind from default exchange.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(542, e.args[0].error_code)
+ 
+     def testDefaultAccessDelete(self):
+         try:
+             self.session.exchange_delete(exchange="")
+             self.fail("Expected 542 (invalid-argument) code for delete of default exchange.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(542, e.args[0].error_code)
+ 
+ class ExchangeTests(TestHelper):
+@@ -523,7 +525,7 @@
+         try:
+             self.session.exchange_bind(queue="q", exchange="amq.match", arguments={"name":"fred" , "age":3} )
+             self.fail("Expected failure for missing x-match arg.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(541, e.args[0].error_code)
+ 
+ class AutodeleteTests(TestHelper, StandardExchangeVerifier):
+@@ -533,7 +535,7 @@
+             s.exchange_declare(exchange=e, passive=True)
+             s.exchange_delete(exchange=e)
+             self.fail("Expected failure for passive declare of %s" % e)
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+ 
+--- ./qpid_tests/broker_0_10/extensions.py	(original)
++++ ./qpid_tests/broker_0_10/extensions.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.content import Content
+@@ -23,6 +24,7 @@
+ from qpid.session import SessionException
+ from qpid.datatypes import uuid4
+ from time import sleep
++from six.moves import range
+ 
+ class ExtensionTests(TestBase010):
+     """Tests for various extensions to AMQP 0-10"""
+@@ -43,7 +45,7 @@
+         try:
+             self.session.queue_declare(queue=name, arguments=args)
+             self.session.queue_delete(queue=name) # cleanup
+-        except SessionException, e:
++        except SessionException as e:
+             self.fail("declare with valid policy args failed: %s" % (args))
+             self.session = self.conn.session("replacement", 2)
+ 
+@@ -56,7 +58,7 @@
+                 self.session.queue_declare(queue=name, arguments=args)
+                 self.session.queue_delete(queue=name) # cleanup
+                 self.fail("declare with invalid policy args suceeded: %s (iteration %d)" % (args, i))
+-            except SessionException, e:
++            except SessionException as e:
+                 self.session = self.conn.session(str(uuid4()))
+ 
+     def test_policy_max_size_as_valid_string(self):
+--- ./qpid_tests/broker_0_10/lvq.py	(original)
++++ ./qpid_tests/broker_0_10/lvq.py	(refactored)
+@@ -17,10 +17,14 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ from qpid.tests.messaging.implementation import *
+ from qpid.tests.messaging import Base
+ import math
+ import random
++import six
++from six.moves import range
+ 
+ class LVQTests (Base):
+     """
+@@ -72,7 +76,7 @@
+             counters[k] += 1
+             messages.append(create_message(k, "%s-%i" % (k, counters[k])))
+         # make sure we have sent at least one message for every key
+-        for k, v in counters.iteritems():
++        for k, v in six.iteritems(counters):
+             if v == 0:
+                 counters[k] += 1
+                 messages.append(create_message(k, "%s-%i" % (k, counters[k])))
+@@ -82,7 +86,7 @@
+ 
+         rcv = self.ssn.receiver("lvq; {mode: browse}")
+         retrieved = fetch_all_as_tuples(rcv)
+-        print [v for k, v in retrieved]
++        print([v for k, v in retrieved])
+ 
+         for k, v in retrieved:
+             assert v == "%s-%i" % (k, counters[k])
+--- ./qpid_tests/broker_0_10/management.py	(original)
++++ ./qpid_tests/broker_0_10/management.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.datatypes import Message, RangedSet
+ from qpid.testlib import TestBase010
+ from qpid.management import managementChannel, managementClient
+@@ -25,6 +26,7 @@
+ import qmf.console
+ import qpid.messaging
+ from qpidtoollibs import BrokerAgent
++from six.moves import range
+ 
+ class ManagementTest (TestBase010):
+ 
+@@ -175,7 +177,7 @@
+         session.queue_declare(queue="src-queue", exclusive=True, auto_delete=True)
+         session.exchange_bind(queue="src-queue", exchange="amq.direct", binding_key="routing_key")
+ 
+-        twenty = range(1,21)
++        twenty = list(range(1,21))
+         props = session.delivery_properties(routing_key="routing_key")
+         for count in twenty:
+             body = "Move Message %d" % count
+@@ -229,8 +231,8 @@
+ 
+         "Consume the messages of the queue and check they are all there in order"
+         session.message_subscribe(queue="src-queue", destination="tag")
+-        session.message_flow(destination="tag", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="tag", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="tag", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="tag", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         queue = session.incoming("tag")
+         for count in twenty:
+             consumed_msg = queue.get(timeout=1)
+@@ -248,7 +250,7 @@
+         session.queue_declare(queue="purge-queue", exclusive=True, auto_delete=True)
+         session.exchange_bind(queue="purge-queue", exchange="amq.direct", binding_key="routing_key")
+ 
+-        twenty = range(1,21)
++        twenty = list(range(1,21))
+         props = session.delivery_properties(routing_key="routing_key")
+         for count in twenty:
+             body = "Purge Message %d" % count
+@@ -324,7 +326,7 @@
+         session.queue_declare(queue="reroute-queue", exclusive=True, auto_delete=True, alternate_exchange="alt.direct1")
+         session.exchange_bind(queue="reroute-queue", exchange="amq.direct", binding_key="routing_key")
+ 
+-        twenty = range(1,21)
++        twenty = list(range(1,21))
+         props = session.delivery_properties(routing_key="routing_key")
+         mp    = session.message_properties(application_headers={'x-qpid.trace' : 'A,B,C'})
+         for count in twenty:
+@@ -373,7 +375,7 @@
+         self.assertEqual(aq.msgDepth,19)
+ 
+         "Make more messages"
+-        twenty = range(1,21)
++        twenty = list(range(1,21))
+         props = session.delivery_properties(routing_key="routing_key")
+         for count in twenty:
+             body = "Reroute Message %d" % count
+--- ./qpid_tests/broker_0_10/message.py	(original)
++++ ./qpid_tests/broker_0_10/message.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.testlib import TestBase010
+@@ -24,6 +25,7 @@
+ 
+ from qpid.content import Content
+ from time import sleep
++from six.moves import range
+ 
+ class MessageTests(TestBase010):
+     """Tests for 'methods' on the amqp message 'class'"""
+@@ -166,7 +168,7 @@
+         try:
+             session.message_subscribe(destination="second", queue="test-queue-2")
+             self.fail("Expected consume request to fail due to previous exclusive consumer")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(405, e.args[0].error_code)
+ 
+     def test_consume_exclusive2(self):
+@@ -179,7 +181,7 @@
+         try:
+             session.message_subscribe(destination="second", queue="test-queue-2", exclusive=True)
+             self.fail("Expected exclusive consume request to fail due to previous consumer")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(405, e.args[0].error_code)
+ 
+     def test_consume_queue_not_found(self):
+@@ -191,7 +193,7 @@
+             #queue specified but doesn't exist:
+             session.message_subscribe(queue="invalid-queue", destination="a")
+             self.fail("Expected failure when consuming from non-existent queue")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+     def test_consume_queue_not_specified(self):
+@@ -200,7 +202,7 @@
+             #queue not specified and none previously declared for channel:
+             session.message_subscribe(destination="a")
+             self.fail("Expected failure when consuming from unspecified queue")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(531, e.args[0].error_code)
+ 
+     def test_consume_unique_consumers(self):
+@@ -216,7 +218,7 @@
+         try:
+             session.message_subscribe(destination="first", queue="test-queue-3")
+             self.fail("Expected consume request to fail due to non-unique tag")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(530, e.args[0].error_code)
+ 
+     def test_cancel(self):
+@@ -230,8 +232,8 @@
+ 
+         session.message_subscribe(destination="my-consumer", queue="test-queue-4")
+         myqueue = session.incoming("my-consumer")
+-        session.message_flow(destination="my-consumer", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="my-consumer", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="my-consumer", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="my-consumer", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+ 
+         #should flush here
+ 
+@@ -249,14 +251,14 @@
+         try:
+             session.message_cancel(destination="my-consumer")
+             self.fail("Expected 404 for recancellation of subscription.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+         session = self.conn.session("alternate-session", timeout=10)
+         try:
+             session.message_cancel(destination="this-never-existed")
+             self.fail("Expected 404 for cancellation of unknown subscription.")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+ 
+@@ -282,8 +284,8 @@
+ 
+         # subscribe with implied acquire, explicit accept:
+         session1.message_subscribe(queue = "test-ack-queue", destination = "consumer")
+-        session1.message_flow(destination="consumer", unit=session1.credit_unit.message, value=0xFFFFFFFFL)
+-        session1.message_flow(destination="consumer", unit=session1.credit_unit.byte, value=0xFFFFFFFFL)
++        session1.message_flow(destination="consumer", unit=session1.credit_unit.message, value=0xFFFFFFFF)
++        session1.message_flow(destination="consumer", unit=session1.credit_unit.byte, value=0xFFFFFFFF)
+         queue = session1.incoming("consumer")
+ 
+         msg1 = queue.get(timeout=1)
+@@ -335,8 +337,8 @@
+         self.assertEquals(queueObj.msgTotalEnqueues, 5)
+         self.assertEquals(queueObj.msgTotalDequeues, 3)
+ 
+-        session2.message_flow(destination="checker", unit=session2.credit_unit.message, value=0xFFFFFFFFL)
+-        session2.message_flow(destination="checker", unit=session2.credit_unit.byte, value=0xFFFFFFFFL)
++        session2.message_flow(destination="checker", unit=session2.credit_unit.message, value=0xFFFFFFFF)
++        session2.message_flow(destination="checker", unit=session2.credit_unit.byte, value=0xFFFFFFFF)
+         queue = session2.incoming("checker")
+ 
+         msg3b = queue.get(timeout=1)
+@@ -370,8 +372,8 @@
+         self.assertEquals(queueObj.msgTotalEnqueues, 5)
+         self.assertEquals(queueObj.msgTotalDequeues, 5)
+ 
+-        self.session.message_flow(destination="final-checker", unit=self.session.credit_unit.message, value=0xFFFFFFFFL)
+-        self.session.message_flow(destination="final-checker", unit=self.session.credit_unit.byte, value=0xFFFFFFFFL)
++        self.session.message_flow(destination="final-checker", unit=self.session.credit_unit.message, value=0xFFFFFFFF)
++        self.session.message_flow(destination="final-checker", unit=self.session.credit_unit.byte, value=0xFFFFFFFF)
+         try:
+             extra = self.session.incoming("final-checker").get(timeout=1)
+             self.fail("Got unexpected message: " + extra.body)
+@@ -384,16 +386,16 @@
+         session.exchange_bind(queue = "r", exchange = "amq.fanout")
+ 
+         session.message_subscribe(queue = "q", destination = "consumer")
+-        session.message_flow(destination="consumer", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="consumer", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="consumer", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="consumer", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         session.message_transfer(message=Message(session.delivery_properties(routing_key="q"), "blah, blah"))
+         msg = session.incoming("consumer").get(timeout = 1)
+         self.assertEquals(msg.body, "blah, blah")
+         session.message_reject(RangedSet(msg.id))
+ 
+         session.message_subscribe(queue = "r", destination = "checker")
+-        session.message_flow(destination="checker", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="checker", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="checker", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="checker", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         msg = session.incoming("checker").get(timeout = 1)
+         self.assertEquals(msg.body, "blah, blah")
+ 
+@@ -414,7 +416,7 @@
+         #set message credit to finite amount (less than enough for all messages)
+         session.message_flow(unit = session.credit_unit.message, value = 5, destination = "c")
+         #set infinite byte credit
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "c")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "c")
+         #check that expected number were received
+         q = session.incoming("c")
+         for i in range(1, 6):
+@@ -447,7 +449,7 @@
+         #set byte credit to finite amount (less than enough for all messages)
+         session.message_flow(unit = session.credit_unit.byte, value = msg_size*5, destination = "c")
+         #set infinite message credit
+-        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFFL, destination = "c")
++        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFF, destination = "c")
+         #check that expected number were received
+         q = session.incoming("c")
+         for i in range(5):
+@@ -478,7 +480,7 @@
+         #set message credit to finite amount (less than enough for all messages)
+         session.message_flow(unit = session.credit_unit.message, value = 5, destination = "c")
+         #set infinite byte credit
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "c")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "c")
+         #check that expected number were received
+         q = session.incoming("c")
+         ids = []
+@@ -519,7 +521,7 @@
+         #set byte credit to finite amount (less than enough for all messages)
+         session.message_flow(unit = session.credit_unit.byte, value = msg_size*5, destination = "c")
+         #set infinite message credit
+-        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFFL, destination = "c")
++        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFF, destination = "c")
+         #check that expected number were received
+         q = session.incoming("c")
+         msgs = []
+@@ -554,7 +556,7 @@
+         ssn.message_transfer(message=Message(ssn.delivery_properties(routing_key="q"), "A"))
+ 
+         for unit in ssn.credit_unit.VALUES:
+-            ssn.message_flow("c", unit, 0xFFFFFFFFL)
++            ssn.message_flow("c", unit, 0xFFFFFFFF)
+ 
+         q = ssn.incoming("c")
+         msgA = q.get(timeout=10)
+@@ -567,7 +569,7 @@
+         ssn.message_accept(RangedSet(msgA.id))
+ 
+         for unit in ssn.credit_unit.VALUES:
+-            ssn.message_flow("c", unit, 0xFFFFFFFFL)
++            ssn.message_flow("c", unit, 0xFFFFFFFF)
+ 
+         #send message B
+         ssn.message_transfer(message=Message(ssn.delivery_properties(routing_key="q"), "B"))
+@@ -584,7 +586,7 @@
+         session.message_subscribe(queue = "q", destination = "c")
+         session.message_set_flow_mode(flow_mode = 1, destination = "c")
+         session.message_flow(unit = session.credit_unit.message, value = 5, destination = "c")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "c")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "c")
+ 
+ 
+         #send batch of messages to queue
+@@ -609,7 +611,7 @@
+ 
+         #re-establish window and check remaining messages
+         session.message_flow(unit = session.credit_unit.message, value = 5, destination = "c")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "c")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "c")
+         for i in range(0, 5):
+             msg = q.get(timeout = 1)
+             self.assertDataEquals(session, msg, "Message %d" % (i+6))
+@@ -634,7 +636,7 @@
+         session.message_subscribe(queue=self.test_queue_name, destination="a")
+         a = session.incoming("a")
+         session.message_set_flow_mode(flow_mode = 1, destination = "a")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         # issue 5 message credits
+         session.message_flow(unit = session.credit_unit.message, value = 5, destination = "a")
+ 
+@@ -653,7 +655,7 @@
+ 
+         session.message_stop(destination = "a")
+ 
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         session.message_flow(unit = session.credit_unit.message, value = 5, destination = "a")
+ 
+         # complete earlier messages after setting the window to 5 message credits
+@@ -681,8 +683,8 @@
+         session.message_subscribe(queue=self.test_queue_name, destination="a")
+         a = session.incoming("a")
+         session.message_set_flow_mode(flow_mode = session.flow_mode.credit, destination = "a")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
+-        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFAL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
++        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFA, destination = "a")
+         #test wraparound of credit balance does not occur
+         session.message_flow(unit = session.credit_unit.message, value = 10, destination = "a")
+         for i in range(1, 50):
+@@ -703,11 +705,11 @@
+             session.message_transfer(message=Message(session.delivery_properties(routing_key="q"), "Message %s" % i))
+ 
+         session.message_subscribe(queue = "q", destination = "a", acquire_mode = 1)
+-        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFFL, destination = "a")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFF, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         session.message_subscribe(queue = "q", destination = "b", acquire_mode = 1)
+-        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFFL, destination = "b")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "b")
++        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFF, destination = "b")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "b")
+ 
+         for i in range(6, 11):
+             session.message_transfer(message=Message(session.delivery_properties(routing_key="q"), "Message %s" % i))
+@@ -739,8 +741,8 @@
+ 
+         session.message_subscribe(queue = "q", destination = "a", acquire_mode = 1, accept_mode = 1)
+         session.message_set_flow_mode(flow_mode = session.flow_mode.credit, destination = "a")
+-        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFFL, destination = "a")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFF, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         msg = session.incoming("a").get(timeout = 1)
+         self.assertEquals("acquire me", msg.body)
+         #message should still be on the queue:
+@@ -763,8 +765,8 @@
+         session.message_transfer(message=Message(session.delivery_properties(routing_key="q"), "acquire me"))
+ 
+         session.message_subscribe(queue = "q", destination = "a", acquire_mode = 1)
+-        session.message_flow(destination="a", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="a", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="a", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="a", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         msg = session.incoming("a").get(timeout = 1)
+         self.assertEquals("acquire me", msg.body)
+         #message should still be on the queue:
+@@ -789,8 +791,8 @@
+         session.message_transfer(message=Message(session.delivery_properties(routing_key="q"), "release me"))
+ 
+         session.message_subscribe(queue = "q", destination = "a")
+-        session.message_flow(destination="a", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="a", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="a", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="a", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         msg = session.incoming("a").get(timeout = 1)
+         self.assertEquals("release me", msg.body)
+         session.message_cancel(destination = "a")
+@@ -810,7 +812,7 @@
+ 
+         session.message_subscribe(queue = "q", destination = "a")
+         session.message_flow(unit = session.credit_unit.message, value = 10, destination = "a")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         queue = session.incoming("a")
+         first = queue.get(timeout = 1)
+         for i in range(2, 10):
+@@ -843,7 +845,7 @@
+ 
+         session.message_subscribe(queue = "q", destination = "a")
+         session.message_flow(unit = session.credit_unit.message, value = 10, destination = "a")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         queue = session.incoming("a")
+         ids = []
+         for i in range (1, 11):
+@@ -868,8 +870,8 @@
+         session.close(timeout=10)
+ 
+         session = self.session
+-        session.message_flow(destination="checker", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="checker", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="checker", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="checker", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         queue = session.incoming("checker")
+ 
+         self.assertEquals("message 4", queue.get(timeout = 1).body)
+@@ -887,7 +889,7 @@
+         session.message_subscribe(queue = "q", destination = "a")
+         session.message_set_flow_mode(flow_mode = 0, destination = "a")
+         session.message_flow(unit = session.credit_unit.message, value = 5, destination = "a")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+ 
+         queue = session.incoming("a")
+         for i in range(1, 6):
+@@ -902,7 +904,7 @@
+ 
+         #now create a not-acquired subscriber
+         session.message_subscribe(queue = "q", destination = "b", acquire_mode=1)
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "b")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "b")
+ 
+         #check it gets those not consumed
+         queue = session.incoming("b")
+@@ -930,7 +932,7 @@
+ 
+         #create a not-acquired subscriber
+         session.message_subscribe(queue = "q", destination = "a", acquire_mode=1)
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         session.message_flow(unit = session.credit_unit.message, value = 10, destination = "a")
+ 
+         #browse through messages
+@@ -952,7 +954,7 @@
+ 
+         #create a second not-acquired subscriber
+         session.message_subscribe(queue = "q", destination = "b", acquire_mode=1)
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "b")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "b")
+         session.message_flow(unit = session.credit_unit.message, value = 1, destination = "b")
+         #check it gets those not consumed
+         queue = session.incoming("b")
+@@ -979,12 +981,12 @@
+ 
+         #create two 'browsers'
+         session.message_subscribe(queue = "q", destination = "a", acquire_mode=1)
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         session.message_flow(unit = session.credit_unit.message, value = 10, destination = "a")
+         queueA = session.incoming("a")
+ 
+         session.message_subscribe(queue = "q", destination = "b", acquire_mode=1)
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "b")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "b")
+         session.message_flow(unit = session.credit_unit.message, value = 10, destination = "b")
+         queueB = session.incoming("b")
+         
+@@ -1001,7 +1003,7 @@
+         
+         #create consumer
+         session.message_subscribe(queue = "q", destination = "c")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "c")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "c")
+         session.message_flow(unit = session.credit_unit.message, value = 10, destination = "c")
+         queueC = session.incoming("c")
+         #consume the message then ack it
+@@ -1023,7 +1025,7 @@
+         #subscribe:
+         session.message_subscribe(queue="q", destination="a")
+         a = session.incoming("a")
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         session.message_flow(unit = session.credit_unit.message, value = 10, destination = "a")
+ 
+         # receive all messages into list
+@@ -1058,8 +1060,8 @@
+ 
+         consumer_tag = "tag1"
+         session.message_subscribe(queue="xyz", destination=consumer_tag)
+-        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFFL, destination = consumer_tag)
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = consumer_tag)
++        session.message_flow(unit = session.credit_unit.message, value = 0xFFFFFFFF, destination = consumer_tag)
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = consumer_tag)
+         queue = session.incoming(consumer_tag)
+         msg = queue.get(timeout=1)
+         self.assertEquals("", msg.body)
+@@ -1098,7 +1100,7 @@
+         messages = session.incoming(d)
+         sleep(1)
+         session.message_flow(unit = session.credit_unit.message, value=2, destination=d)
+-        session.message_flow(unit = session.credit_unit.byte, value=0xFFFFFFFFL, destination=d)
++        session.message_flow(unit = session.credit_unit.byte, value=0xFFFFFFFF, destination=d)
+         assert messages.get(timeout=1).body == "second"
+         self.assertEmpty(messages)
+ 
+--- ./qpid_tests/broker_0_10/msg_groups.py	(original)
++++ ./qpid_tests/broker_0_10/msg_groups.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.messaging import *
+ from qpid.tests.messaging import Base
+ import qmf.console
+--- ./qpid_tests/broker_0_10/new_api.py	(original)
++++ ./qpid_tests/broker_0_10/new_api.py	(refactored)
+@@ -17,10 +17,13 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ from qpid.tests.messaging.implementation import *
+ from qpid.tests.messaging import Base
+ from qpidtoollibs import BrokerAgent
+ from time import sleep
++from six.moves import range
+ 
+ #
+ # Broker tests using the new messaging API
+@@ -33,14 +36,14 @@
+ 
+     def assertEqual(self, left, right, text=None):
+         if not left == right:
+-            print "assertEqual failure: %r != %r" % (left, right)
++            print("assertEqual failure: %r != %r" % (left, right))
+             if text:
+-                print "  %r" % text
++                print("  %r" % text)
+             assert None
+ 
+     def fail(self, text=None):
+         if text:
+-            print "Fail: %r" % text
++            print("Fail: %r" % text)
+         assert None
+ 
+     def setup_connection(self):
+@@ -54,7 +57,7 @@
+         try:
+             ssn.receiver("does-not-exist")
+             self.fail("Expected non-existent node to cause NotFound exception")
+-        except NotFound, e: None
++        except NotFound as e: None
+ 
+     def test_qpid_3481_acquired_to_alt_exchange(self):
+         """
+@@ -283,7 +286,7 @@
+ 
+     def fail(self, text=None):
+         if text:
+-            print "Fail: %r" % text
++            print("Fail: %r" % text)
+         assert None
+ 
+     def setup_connection(self):
+--- ./qpid_tests/broker_0_10/persistence.py	(original)
++++ ./qpid_tests/broker_0_10/persistence.py	(refactored)
+@@ -16,9 +16,11 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.datatypes import Message, RangedSet
+ #from qpid.testlib import testrunner, TestBase010
+ from qpid.testlib import TestBase010
++from six.moves import range
+ 
+ class PersistenceTests(TestBase010):
+     def test_delete_queue_after_publish(self):
+@@ -50,7 +52,7 @@
+ 
+         #create consumer
+         session.message_subscribe(queue = "q", destination = "a", accept_mode = 1, acquire_mode=0)
+-        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFFL, destination = "a")
++        session.message_flow(unit = session.credit_unit.byte, value = 0xFFFFFFFF, destination = "a")
+         session.message_flow(unit = session.credit_unit.message, value = 10, destination = "a")
+         queue = session.incoming("a")
+ 
+--- ./qpid_tests/broker_0_10/priority.py	(original)
++++ ./qpid_tests/broker_0_10/priority.py	(refactored)
+@@ -17,10 +17,12 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.tests.messaging.implementation import *
+ from qpid.tests.messaging import Base
+ from qpid.compat import set
+ import math
++from six.moves import range
+ 
+ class PriorityTests (Base):
+     """
+@@ -135,23 +137,23 @@
+     def test_ring_queue_1(self):
+         priorities = [4,5,3,6,9,9,2,9,2,9,9,1,9,9,9,3,3,3,9,9,3,9,3,9,9,9,9,9,9,2,3]
+         seq = content("msg")
+-        self.ring_queue_check([Message(content=seq.next(), priority = p) for p in priorities])
++        self.ring_queue_check([Message(content=next(seq), priority = p) for p in priorities])
+ 
+     def test_ring_queue_2(self):
+         priorities = [9,0,2,3,6,3,4,2,9,2,9,9,1,9,4,7,1,1,3,9,7,3,9,3,9,1,5,1,9,7,2,3,0,9]
+         seq = content("msg")
+-        self.ring_queue_check([Message(content=seq.next(), priority = p) for p in priorities])
++        self.ring_queue_check([Message(content=next(seq), priority = p) for p in priorities])
+ 
+     def test_ring_queue_3(self):
+         #test case given for QPID-3866
+         priorities = [8,9,5,1,2,2,3,4,9,7,8,9,9,2]
+         seq = content("msg")
+-        self.ring_queue_check([Message(content=seq.next(), priority = p) for p in priorities], 5)
++        self.ring_queue_check([Message(content=next(seq), priority = p) for p in priorities], 5)
+ 
+     def test_ring_queue_4(self):
+         priorities = [9,0,2,3,6,3,4,2,9,2,9,3,1,9,4,7,1,1,3,2,7,3,9,3,6,1,5,1,9,7,2,3,0,2]
+         seq = content("msg")
+-        self.ring_queue_check([Message(content=seq.next(), priority = p) for p in priorities])
++        self.ring_queue_check([Message(content=next(seq), priority = p) for p in priorities])
+ 
+     def test_requeue(self):
+         priorities = [4,5,3,6,9,9,2,9,2,9,9,1,9,9,9,3,3,3,9,9,3,9,3,9,9,9,9,9,9,2,3]
+--- ./qpid_tests/broker_0_10/qmf_events.py	(original)
++++ ./qpid_tests/broker_0_10/qmf_events.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.messaging import *
+ from qpid.tests.messaging import Base
+ from qpidtoollibs.broker import EventHelper
+--- ./qpid_tests/broker_0_10/query.py	(original)
++++ ./qpid_tests/broker_0_10/query.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.content import Content
+--- ./qpid_tests/broker_0_10/queue.py	(original)
++++ ./qpid_tests/broker_0_10/queue.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.testlib import TestBase010
+@@ -49,8 +50,8 @@
+         #send a further message and consume it, ensuring that the other messages are really gone
+         session.message_transfer(message=Message(session.delivery_properties(routing_key="test-queue"), "four"))
+         session.message_subscribe(queue="test-queue", destination="tag")
+-        session.message_flow(destination="tag", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="tag", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="tag", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="tag", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         queue = session.incoming("tag")
+         msg = queue.get(timeout=1)
+         self.assertEqual("four", msg.body)
+@@ -65,7 +66,7 @@
+             #queue specified but doesn't exist:
+             session.queue_purge(queue="invalid-queue")            
+             self.fail("Expected failure when purging non-existent queue")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code) #not-found
+ 
+     def test_purge_empty_name(self):        
+@@ -78,7 +79,7 @@
+             #queue not specified and none previously declared for channel:
+             session.queue_purge()
+             self.fail("Expected failure when purging unspecified queue")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(531, e.args[0].error_code) #illegal-argument
+ 
+     def test_declare_exclusive(self):
+@@ -97,7 +98,7 @@
+             #other connection should not be allowed to declare this:
+             s2.queue_declare(queue="exclusive-queue", exclusive=True, auto_delete=True)
+             self.fail("Expected second exclusive queue_declare to raise a channel exception")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(405, e.args[0].error_code)
+ 
+         s3 = self.conn.session("subscriber")
+@@ -105,7 +106,7 @@
+             #other connection should not be allowed to declare this:
+             s3.message_subscribe(queue="exclusive-queue")
+             self.fail("Expected message_subscribe on an exclusive queue to raise a channel exception")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(405, e.args[0].error_code)
+ 
+         s4 = self.conn.session("deleter")
+@@ -113,7 +114,7 @@
+             #other connection should not be allowed to declare this:
+             s4.queue_delete(queue="exclusive-queue")
+             self.fail("Expected queue_delete on an exclusive queue to raise a channel exception")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(405, e.args[0].error_code)
+ 
+         s5 = self.conn.session("binder")
+@@ -121,7 +122,7 @@
+             #other connection should not be allowed to declare this:
+             s5.exchange_bind(exchange="amq.direct", queue="exclusive-queue", binding_key="abc")
+             self.fail("Expected exchange_bind on an exclusive queue to raise an exception")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(405, e.args[0].error_code)
+ 
+         s6 = self.conn.session("unbinder")
+@@ -129,7 +130,7 @@
+             #other connection should not be allowed to declare this:
+             s6.exchange_unbind(exchange="amq.fanout", queue="exclusive-queue")
+             self.fail("Expected exchange_unbind on an exclusive queue to raise an exception")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(405, e.args[0].error_code)
+ 
+     def test_declare_exclusive_alreadyinuse(self):
+@@ -148,7 +149,7 @@
+             #other connection should not be allowed to declare this:
+             s2.queue_declare(queue="a-queue", exclusive=True, auto_delete=True)
+             self.fail("Expected request for exclusivity to fail")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(405, e.args[0].error_code)
+ 
+     def test_declare_passive(self):
+@@ -175,7 +176,7 @@
+       try:
+         s1.queue_declare(queue="passive-queue-not-found", passive=True)
+         self.fail("Expected passive declaration of non-existent queue to raise a channel exception")
+-      except SessionException, e:
++      except SessionException as e:
+         self.assertEquals(404, e.args[0].error_code) #not-found
+ 
+ 
+@@ -198,7 +199,7 @@
+         try:
+           s2.queue_declare(queue="passive-queue-nonexc", exclusive=True, passive=True)
+           self.fail("Expected exclusive passive declaration of existing queue to raise a channel exception")
+-        except SessionException, e:
++        except SessionException as e:
+           self.assertEquals(405, e.args[0].error_code) # resource locked
+ 
+     def test_bind(self):
+@@ -218,7 +219,7 @@
+         try:
+             session.exchange_bind(queue="queue-1", exchange="an-invalid-exchange", binding_key="key1")
+             self.fail("Expected bind to non-existant exchange to fail")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+ 
+@@ -228,7 +229,7 @@
+         try:
+             session.exchange_bind(queue="queue-2", exchange="amq.direct", binding_key="key1")
+             self.fail("Expected bind of non-existant queue to fail")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+     def test_unbind_direct(self):
+@@ -251,11 +252,11 @@
+         session.queue_declare(queue="queue-2", exclusive=True, auto_delete=True)
+ 
+         session.message_subscribe(queue="queue-1", destination="queue-1")
+-        session.message_flow(destination="queue-1", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="queue-1", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="queue-1", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="queue-1", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         session.message_subscribe(queue="queue-2", destination="queue-2")
+-        session.message_flow(destination="queue-2", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="queue-2", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="queue-2", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="queue-2", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+ 
+         queue1 = session.incoming("queue-1")
+         queue2 = session.incoming("queue-2")
+@@ -312,7 +313,7 @@
+         try:
+             session.queue_declare(queue="delete-me", passive=True)
+             self.fail("Queue has not been deleted")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+     def test_delete_queue_exists(self):
+@@ -324,7 +325,7 @@
+         try:
+             session.queue_delete(queue="i-dont-exist", if_empty=True)
+             self.fail("Expected delete of non-existant queue to fail")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+         
+@@ -344,7 +345,7 @@
+         try:
+             session.queue_delete(queue="delete-me-2", if_empty=True)
+             self.fail("Expected delete if_empty to fail for non-empty queue")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(406, e.args[0].error_code)
+ 
+         #need new session now:    
+@@ -352,8 +353,8 @@
+ 
+         #empty queue:
+         session.message_subscribe(destination="consumer_tag", queue="delete-me-2")
+-        session.message_flow(destination="consumer_tag", unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination="consumer_tag", unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination="consumer_tag", unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination="consumer_tag", unit=session.credit_unit.byte, value=0xFFFFFFFF)
+         queue = session.incoming("consumer_tag")
+         msg = queue.get(timeout=1)
+         self.assertEqual("message", msg.body)
+@@ -367,7 +368,7 @@
+         try:
+             session.queue_declare(queue="delete-me-2", passive=True)
+             self.fail("Queue has not been deleted")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+         
+     def test_delete_ifunused(self):
+@@ -388,7 +389,7 @@
+         try:
+             session2.queue_delete(queue="delete-me-3", if_unused=True)
+             self.fail("Expected delete if_unused to fail for queue with existing consumer")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(406, e.args[0].error_code)
+ 
+         session.message_cancel(destination="consumer_tag")    
+@@ -397,7 +398,7 @@
+         try:
+             session.queue_declare(queue="delete-me-3", passive=True)
+             self.fail("Queue has not been deleted")
+-        except SessionException, e:
++        except SessionException as e:
+             self.assertEquals(404, e.args[0].error_code)
+ 
+ 
+@@ -430,7 +431,7 @@
+         try:
+             session.queue_declare(queue="auto-delete-me", passive=True)
+             self.fail("Expected queue to have been deleted")
+-        except SessionException, e:
+-            self.assertEquals(404, e.args[0].error_code)
+-
+-
++        except SessionException as e:
++            self.assertEquals(404, e.args[0].error_code)
++
++
+--- ./qpid_tests/broker_0_10/stats.py	(original)
++++ ./qpid_tests/broker_0_10/stats.py	(refactored)
+@@ -17,6 +17,8 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ from qpid.tests.messaging.implementation import *
+ from qpid.tests.messaging import Base
+ from time import sleep
+@@ -33,24 +35,24 @@
+ 
+     def assertEqual(self, left, right, text=None):
+         if not left == right:
+-            print "assertEqual failure: %r != %r" % (left, right)
++            print("assertEqual failure: %r != %r" % (left, right))
+             if text:
+-                print "  %r" % text
++                print("  %r" % text)
+             assert None
+ 
+     def failUnless(self, value, text=None):
+         if value:
+             return
+-        print "failUnless failure",
++        print("failUnless failure", end=' ')
+         if text:
+-            print ": %r" % text
++            print(": %r" % text)
+         else:
+-            print
++            print()
+         assert None
+ 
+     def fail(self, text=None):
+         if text:
+-            print "Fail: %r" % text
++            print("Fail: %r" % text)
+         assert None
+ 
+     def setup_connection(self):
+--- ./qpid_tests/broker_0_10/threshold.py	(original)
++++ ./qpid_tests/broker_0_10/threshold.py	(refactored)
+@@ -17,9 +17,11 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.messaging import *
+ from qpid.tests.messaging import Base
+ import math
++from six.moves import range
+ 
+ class ThresholdTests (Base):
+     """
+--- ./qpid_tests/broker_0_10/tx.py	(original)
++++ ./qpid_tests/broker_0_10/tx.py	(refactored)
+@@ -16,10 +16,12 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.datatypes import Message, RangedSet
+ from qpid.testlib import TestBase010
++from six.moves import range
+ 
+ class TxTests(TestBase010):
+     """
+@@ -251,13 +253,13 @@
+         session = session or self.session
+         consumer_tag = keys["destination"]
+         session.message_subscribe(**keys)
+-        session.message_flow(destination=consumer_tag, unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination=consumer_tag, unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination=consumer_tag, unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination=consumer_tag, unit=session.credit_unit.byte, value=0xFFFFFFFF)
+ 
+     def enable_flow(self, tag, session=None):
+         session = session or self.session
+-        session.message_flow(destination=tag, unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination=tag, unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination=tag, unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination=tag, unit=session.credit_unit.byte, value=0xFFFFFFFF)
+ 
+     def complete(self, session, msg):
+         session.receiver._completed.add(msg.id)#TODO: this may be done automatically
+--- ./qpid_tests/broker_0_8/__init__.py	(original)
++++ ./qpid_tests/broker_0_8/__init__.py	(refactored)
+@@ -19,4 +19,5 @@
+ # under the License.
+ #
+ 
+-import basic, broker, example, exchange, queue, testlib, tx
++from __future__ import absolute_import
++from . import basic, broker, example, exchange, queue, testlib, tx
+--- ./qpid_tests/broker_0_8/basic.py	(original)
++++ ./qpid_tests/broker_0_8/basic.py	(refactored)
+@@ -16,10 +16,12 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.content import Content
+ from qpid.testlib import TestBase
++from six.moves import range
+ 
+ class BasicTests(TestBase):
+     """Tests for 'methods' on the amqp basic 'class'"""
+@@ -64,7 +66,7 @@
+         try:
+             channel.basic_consume(consumer_tag="second", queue="test-queue-2")
+             self.fail("Expected consume request to fail due to previous exclusive consumer")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(403, e.args[0])
+ 
+         #open new channel and cleanup last consumer:    
+@@ -76,7 +78,7 @@
+         try:
+             channel.basic_consume(consumer_tag="second", queue="test-queue-2", exclusive=True)
+             self.fail("Expected exclusive consume request to fail due to previous consumer")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(403, e.args[0])
+ 
+     def test_reconnect_to_durable_subscription(self):
+@@ -133,7 +135,7 @@
+             #queue specified but doesn't exist:
+             channel.basic_consume(queue="invalid-queue")
+             self.fail("Expected failure when consuming from non-existent queue")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+ 
+         channel = self.client.channel(2)
+@@ -142,7 +144,7 @@
+             #queue not specified and none previously declared for channel:
+             channel.basic_consume(queue="")
+             self.fail("Expected failure when consuming from unspecified queue")
+-        except Closed, e:
++        except Closed as e:
+             self.assertConnectionException(530, e.args[0])
+ 
+     def test_consume_unique_consumers(self):
+@@ -158,7 +160,7 @@
+         try:
+             channel.basic_consume(consumer_tag="first", queue="test-queue-3")
+             self.fail("Expected consume request to fail due to non-unique tag")
+-        except Closed, e:
++        except Closed as e:
+             self.assertConnectionException(530, e.args[0])
+ 
+     def test_cancel(self):
+--- ./qpid_tests/broker_0_8/broker.py	(original)
++++ ./qpid_tests/broker_0_8/broker.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Closed
+ from qpid.queue import Empty
+ from qpid.content import Content
+@@ -89,7 +90,7 @@
+         try:
+             channel.queue_declare(exclusive=True)
+             self.fail("Expected error on queue_declare for invalid channel")
+-        except Closed, e:
++        except Closed as e:
+             self.assertConnectionException(504, e.args[0])
+         
+     def test_closed_channel(self):
+@@ -99,7 +100,7 @@
+         try:
+             channel.queue_declare(exclusive=True)
+             self.fail("Expected error on queue_declare for closed channel")
+-        except Closed, e:
++        except Closed as e:
+             self.assertConnectionException(504, e.args[0])
+ 
+     def test_channel_flow(self):
+--- ./qpid_tests/broker_0_8/example.py	(original)
++++ ./qpid_tests/broker_0_8/example.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.content import Content
+ from qpid.testlib import TestBase
+ 
+--- ./qpid_tests/broker_0_8/exchange.py	(original)
++++ ./qpid_tests/broker_0_8/exchange.py	(refactored)
+@@ -23,7 +23,8 @@
+ Test classes ending in 'RuleTests' are derived from rules in amqp.xml.
+ """
+ 
+-import Queue, logging
++from __future__ import absolute_import
++import six.moves.queue, logging
+ from qpid.testlib import TestBase
+ from qpid.content import Content
+ from qpid.client import Closed
+@@ -42,7 +43,7 @@
+         try:
+             self.assertPublishConsume(exchange=ex, queue="q", routing_key="kk")
+             self.fail("Expected Empty exception")
+-        except Queue.Empty: None # Expected
++        except six.moves.queue.Empty: None # Expected
+ 
+     def verifyFanOutExchange(self, ex):
+         """Verify that ex behaves like a fanout exchange."""
+@@ -221,7 +222,7 @@
+         try:
+             self.channel.exchange_declare(exchange="humpty_dumpty", passive=True)
+             self.fail("Expected 404 for passive declaration of unknown exchange.")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+ 
+ 
+@@ -313,7 +314,7 @@
+         try:
+             self.channel.exchange_declare(exchange="test_type_not_known_exchange", type="invalid_type")
+             self.fail("Expected 503 for declaration of unknown exchange type.")
+-        except Closed, e:
++        except Closed as e:
+             self.assertConnectionException(503, e.args[0])
+ 
+     def testDifferentDeclaredType(self):
+@@ -321,7 +322,7 @@
+         try:
+             self.channel.exchange_declare(exchange="test_different_declared_type_exchange", type="topic")
+             self.fail("Expected 530 for redeclaration of exchange with different type.")
+-        except Closed, e:
++        except Closed as e:
+             self.assertConnectionException(530, e.args[0])
+         #cleanup    
+         other = self.connect()
+@@ -337,13 +338,13 @@
+         try:
+             self.channel.exchange_declare(exchange="amq.direct", type="topic", passive=False)
+             self.fail("Expected 530 for redeclaration of exchange with different type.")
+-        except Closed, e:
++        except Closed as e:
+             self.assertConnectionException(530, e.args[0])
+ 
+     def testReservedExchangeNameDisallowed(self):
+         try:
+             self.channel.exchange_declare(exchange="amq.myexch", type="direct", passive=False)
+             self.fail("Expected 530 for redeclaration of exchange with different type.")
+-        except Closed, e:
++        except Closed as e:
+             self.assertConnectionException(530, e.args[0])
+ 
+--- ./qpid_tests/broker_0_8/queue.py	(original)
++++ ./qpid_tests/broker_0_8/queue.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.content import Content
+@@ -61,7 +62,7 @@
+             #queue specified but doesn't exist:
+             channel.queue_purge(queue="invalid-queue")
+             self.fail("Expected failure when purging non-existent queue")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+ 
+         channel = self.client.channel(3)
+@@ -70,7 +71,7 @@
+             #queue not specified and none previously declared for channel:
+             channel.queue_purge()
+             self.fail("Expected failure when purging unspecified queue")
+-        except Closed, e:
++        except Closed as e:
+             self.assertConnectionException(530, e.args[0])
+ 
+         #cleanup    
+@@ -96,7 +97,7 @@
+             #other connection should not be allowed to declare this:
+             c2.queue_declare(queue="exclusive-queue", exclusive="True")
+             self.fail("Expected second exclusive queue_declare to raise a channel exception")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(405, e.args[0])
+ 
+ 
+@@ -112,7 +113,7 @@
+             #other connection should not be allowed to declare this:
+             channel.queue_declare(queue="passive-queue-2", passive="True")
+             self.fail("Expected passive declaration of non-existant queue to raise a channel exception")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+ 
+ 
+@@ -136,7 +137,7 @@
+         try:
+             channel.queue_bind(queue="queue-1", exchange="an-invalid-exchange", routing_key="key1")
+             self.fail("Expected bind to non-existant exchange to fail")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+ 
+         #need to reopen a channel:    
+@@ -147,7 +148,7 @@
+         try:
+             channel.queue_bind(queue="queue-2", exchange="amq.direct", routing_key="key1")
+             self.fail("Expected bind of non-existant queue to fail")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+ 
+ 
+@@ -168,7 +169,7 @@
+         try:
+             channel.queue_declare(queue="delete-me", passive="True")
+             self.fail("Queue has not been deleted")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+ 
+         #check attempted deletion of non-existant queue is handled correctly:    
+@@ -177,7 +178,7 @@
+         try:
+             channel.queue_delete(queue="i-dont-exist", if_empty="True")
+             self.fail("Expected delete of non-existant queue to fail")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+ 
+         
+@@ -197,7 +198,7 @@
+         try:
+             channel.queue_delete(queue="delete-me-2", if_empty="True")
+             self.fail("Expected delete if_empty to fail for non-empty queue")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(406, e.args[0])
+ 
+         #need new channel now:    
+@@ -218,7 +219,7 @@
+         try:
+             channel.queue_declare(queue="delete-me-2", passive="True")
+             self.fail("Queue has not been deleted")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+         
+     def test_delete_ifunused(self):
+@@ -239,7 +240,7 @@
+         try:
+             channel2.queue_delete(queue="delete-me-3", if_unused="True")
+             self.fail("Expected delete if_unused to fail for queue with existing consumer")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(406, e.args[0])
+ 
+ 
+@@ -249,7 +250,7 @@
+         try:
+             channel.queue_declare(queue="delete-me-3", passive="True")
+             self.fail("Queue has not been deleted")
+-        except Closed, e:
+-            self.assertChannelException(404, e.args[0])
+-
+-
++        except Closed as e:
++            self.assertChannelException(404, e.args[0])
++
++
+--- ./qpid_tests/broker_0_8/testlib.py	(original)
++++ ./qpid_tests/broker_0_8/testlib.py	(refactored)
+@@ -21,16 +21,18 @@
+ # Tests for the testlib itself.
+ # 
+ 
++from __future__ import absolute_import
++from __future__ import print_function
+ from qpid.content import Content
+ from qpid.testlib import TestBase
+-from Queue import Empty
++from six.moves.queue import Empty
+ 
+ import sys
+ from traceback import *
+ 
+ def mytrace(frame, event, arg):
+     print_stack(frame);
+-    print "===="
++    print("====")
+     return mytrace
+     
+ class TestBaseTest(TestBase):
+--- ./qpid_tests/broker_0_8/tx.py	(original)
++++ ./qpid_tests/broker_0_8/tx.py	(refactored)
+@@ -16,10 +16,12 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.content import Content
+ from qpid.testlib import TestBase
++from six.moves import range
+ 
+ class TxTests(TestBase):
+     """
+--- ./qpid_tests/broker_0_9/__init__.py	(original)
++++ ./qpid_tests/broker_0_9/__init__.py	(refactored)
+@@ -19,4 +19,5 @@
+ # under the License.
+ #
+ 
+-import query, queue, messageheader, echo
++from __future__ import absolute_import
++from . import query, queue, messageheader, echo
+--- ./qpid_tests/broker_0_9/echo.py	(original)
++++ ./qpid_tests/broker_0_9/echo.py	(refactored)
+@@ -17,11 +17,13 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.testlib import TestBase
+ from qpid.content import Content
+ from qpid.harness import Skipped
+ 
+ import qpid.client
++from six.moves import range
+ 
+ class EchoTests(TestBase):
+   """Verify that messages can be sent and received retaining fidelity"""
+--- ./qpid_tests/broker_0_9/messageheader.py	(original)
++++ ./qpid_tests/broker_0_9/messageheader.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.testlib import TestBase
+ 
+ class MessageHeaderTests(TestBase):
+--- ./qpid_tests/broker_0_9/query.py	(original)
++++ ./qpid_tests/broker_0_9/query.py	(refactored)
+@@ -16,6 +16,7 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.content import Content
+--- ./qpid_tests/broker_0_9/queue.py	(original)
++++ ./qpid_tests/broker_0_9/queue.py	(refactored)
+@@ -16,12 +16,14 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ import time
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.content import Content
+ from qpid.testlib import TestBase
+ from qpid.exceptions import Timeout
++from six.moves import range
+ 
+ class QueueTests(TestBase):
+     """Tests for 'methods' on the amqp queue 'class'"""
+@@ -109,7 +111,7 @@
+         try:
+             channel.queue_declare(queue="auto-delete-me", passive=True)
+             self.fail("Expected queue to have been deleted")
+-        except Closed, e:
++        except Closed as e:
+             self.assertChannelException(404, e.args[0])
+ 
+     def test_flow_control(self):
+@@ -121,7 +123,7 @@
+         channel.queue_declare(queue=queue_name, arguments={"x-qpid-capacity" : 25, "x-qpid-flow-resume-capacity" : 15})
+ 
+         try:
+-            for i in xrange(100):
++            for i in range(100):
+                 channel.basic_publish(exchange="", routing_key=queue_name,
+                                       content=Content("This is a message with more than 25 bytes. This should trigger flow control."))
+                 time.sleep(.1)
+--- ./qpid_tests/broker_1_0/__init__.py	(original)
++++ ./qpid_tests/broker_1_0/__init__.py	(refactored)
+@@ -19,8 +19,9 @@
+ # under the License.
+ #
+ 
+-from general import *
+-from legacy_exchanges import *
+-from selector import *
+-from translation import *
+-from tx import *
++from __future__ import absolute_import
++from .general import *
++from .legacy_exchanges import *
++from .selector import *
++from .translation import *
++from .tx import *
+--- ./qpid_tests/broker_1_0/general.py	(original)
++++ ./qpid_tests/broker_1_0/general.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.tests.messaging.implementation import *
+ from qpid.tests.messaging import VersionTest
+ 
+@@ -59,7 +60,7 @@
+             assert msg.content == expected.content
+             try:
+                 assert msg.properties.get('x-amqp-delivery-count') == 0, (msg.properties.get('x-amqp-delivery-count'))
+-            except KeyError, e: None #default is 0
++            except KeyError as e: None #default is 0
+             self.ssn.acknowledge(msg)
+         rcv.close()
+ 
+--- ./qpid_tests/broker_1_0/legacy_exchanges.py	(original)
++++ ./qpid_tests/broker_1_0/legacy_exchanges.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.tests.messaging.implementation import *
+ from qpid.tests.messaging import VersionTest
+ 
+--- ./qpid_tests/broker_1_0/selector.py	(original)
++++ ./qpid_tests/broker_1_0/selector.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.tests.messaging.implementation import *
+ from qpid.tests.messaging import VersionTest
+ 
+--- ./qpid_tests/broker_1_0/translation.py	(original)
++++ ./qpid_tests/broker_1_0/translation.py	(refactored)
+@@ -17,6 +17,7 @@
+ # under the License.
+ #
+ 
++from __future__ import absolute_import
+ from qpid.tests.messaging.implementation import *
+ from qpid.tests.messaging import VersionTest
+ 
+--- ./qpid_tests/broker_1_0/tx.py	(original)
++++ ./qpid_tests/broker_1_0/tx.py	(refactored)
+@@ -16,10 +16,12 @@
+ # specific language governing permissions and limitations
+ # under the License.
+ #
++from __future__ import absolute_import
+ from qpid.client import Client, Closed
+ from qpid.queue import Empty
+ from qpid.datatypes import Message, RangedSet
+ from qpid.testlib import TestBase010
++from six.moves import range
+ 
+ class TxTests(TestBase010):
+     """
+@@ -251,13 +253,13 @@
+         session = session or self.session
+         consumer_tag = keys["destination"]
+         session.message_subscribe(**keys)
+-        session.message_flow(destination=consumer_tag, unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination=consumer_tag, unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination=consumer_tag, unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination=consumer_tag, unit=session.credit_unit.byte, value=0xFFFFFFFF)
+ 
+     def enable_flow(self, tag, session=None):
+         session = session or self.session
+-        session.message_flow(destination=tag, unit=session.credit_unit.message, value=0xFFFFFFFFL)
+-        session.message_flow(destination=tag, unit=session.credit_unit.byte, value=0xFFFFFFFFL)
++        session.message_flow(destination=tag, unit=session.credit_unit.message, value=0xFFFFFFFF)
++        session.message_flow(destination=tag, unit=session.credit_unit.byte, value=0xFFFFFFFF)
+ 
+     def complete(self, session, msg):
+         session.receiver._completed.add(msg.id)#TODO: this may be done automatically
+--- ./qpid_tests/client/client-api-example-tests.py	(original)
++++ ./qpid_tests/client/client-api-example-tests.py	(refactored)
+@@ -28,6 +28,7 @@
+ 
+ """
+ 
++from __future__ import absolute_import
+ import os
+ import shlex
+ import subprocess

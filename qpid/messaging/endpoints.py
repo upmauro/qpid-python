@@ -28,6 +28,7 @@ Areas that still need work:
   - protocol negotiation/multiprotocol impl
 """
 
+from __future__ import absolute_import
 from logging import getLogger
 from math import ceil
 from qpid.codec010 import StringCodec
@@ -39,6 +40,7 @@ from qpid.messaging.message import *
 from qpid.ops import PRIMITIVE
 from qpid.util import default, URL
 from threading import Thread, RLock
+import six
 
 log = getLogger("qpid.messaging")
 
@@ -180,7 +182,7 @@ class Connection(Endpoint):
     for key in opt_keys:
         setattr(self, key, None)
     # Get values from options, check for invalid options
-    for (key, value) in options.iteritems():
+    for (key, value) in six.iteritems(options):
         if key in opt_keys:
             setattr(self, key, value)
         else:
@@ -189,7 +191,7 @@ class Connection(Endpoint):
     # Now handle items that need special treatment or have speical defaults:
     if self.host:
         url = default(url, self.host)
-    if isinstance(url, basestring):
+    if isinstance(url, six.string_types):
         url = URL(url)
     self.host = url.host
 
@@ -245,7 +247,7 @@ class Connection(Endpoint):
     self._condition = Condition(self._lock)
     self._waiter = Waiter(self._condition)
     self._modcount = Serial(0)
-    from driver import Driver
+    from .driver import Driver
     self._driver = Driver(self)
 
   def _wait(self, predicate, timeout=None):
@@ -298,7 +300,7 @@ class Connection(Endpoint):
     else:
       name = "%s:%s" % (self.id, name)
 
-    if self.sessions.has_key(name):
+    if name in self.sessions:
       return self.sessions[name]
     else:
       ssn = Session(self, name, transactional)
@@ -671,7 +673,7 @@ class Session(Endpoint):
       self._wakeup()
       try:
         sender._ewait(lambda: sender.linked)
-      except LinkError, e:
+      except LinkError as e:
         sender.close()
         raise e
     return sender
@@ -695,7 +697,7 @@ class Session(Endpoint):
       self._wakeup()
       try:
         receiver._ewait(lambda: receiver.linked)
-      except LinkError, e:
+      except LinkError as e:
         receiver.close()
         raise e
     return receiver
@@ -825,7 +827,7 @@ class Session(Endpoint):
         raise Timeout("commit timed out")
     except TransactionError:
       raise
-    except Exception, e:
+    except Exception as e:
       self.error = TransactionAborted(text="Transaction aborted: %s"%e)
       raise self.error
     if self.aborted:

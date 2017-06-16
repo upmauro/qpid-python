@@ -23,9 +23,10 @@ implementation to add a close() method so that threads blocking on the
 content of a queue can be notified if the queue is no longer in use.
 """
 
-from Queue import Queue as BaseQueue, Empty, Full
+from __future__ import absolute_import
+from six.moves.queue import Queue as BaseQueue, Empty, Full
 from threading import Thread
-from exceptions import Closed
+from .exceptions import Closed
 
 class Queue(BaseQueue):
 
@@ -83,7 +84,7 @@ class Queue(BaseQueue):
         o = self.get()
         if o == Queue.STOP: break
         self.listener(o)
-      except Closed, e:
+      except Closed as e:
         if self.exc_listener is not None:
           self.exc_listener(e)
         break
