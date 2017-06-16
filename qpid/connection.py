@@ -26,8 +26,9 @@ from .framing import *
 from .session import Session
 from .generator import control_invoker
 from .exceptions import *
+from qpid import delegates
 from logging import getLogger
-import delegates, socket
+import socket
 import sys
 from six.moves import range
 
