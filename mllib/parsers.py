@@ -22,7 +22,8 @@ Parsers for SGML and XML to dom.
 """
 
 from __future__ import absolute_import
-import sgmllib, xml.sax.handler
+from mllib import sgmllib
+import xml.sax.handler
 from .dom import *
 
 class Parser:
