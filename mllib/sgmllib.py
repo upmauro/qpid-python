@@ -449,7 +449,7 @@ class SGMLParseError(RuntimeError):
 # chunks).  Entity references are passed by calling
 # self.handle_entityref() with the entity reference as argument.
 
-class SGMLParser(markupbase.ParserBase):
+class SGMLParser(ParserBase):
 
     def __init__(self, verbose=0):
         """Initialize and reset this instance."""
@@ -463,7 +463,7 @@ class SGMLParser(markupbase.ParserBase):
         self.lasttag = '???'
         self.nomoretags = 0
         self.literal = 0
-        markupbase.ParserBase.reset(self)
+        ParserBase.reset(self)
 
     def setnomoretags(self):
         """Enter literal mode (CDATA) till EOF.
