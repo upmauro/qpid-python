@@ -18,7 +18,8 @@
 #
 
 from __future__ import absolute_import
-import os, connection, session
+import os
+from qpid import connection, session
 from .util import notify, get_client_properties_with_defaults
 from .datatypes import RangedSet
 from .exceptions import VersionError, Closed
