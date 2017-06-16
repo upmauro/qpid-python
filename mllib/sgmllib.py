@@ -408,8 +408,9 @@ class ParserBase:
     # To be overridden -- handlers for unknown objects
     def unknown_decl(self, data):
         pass
-        
+
 # Regular expressions used for parsing
+import re
 
 interesting = re.compile('[&<]')
 incomplete = re.compile('&([a-zA-Z][a-zA-Z0-9]*|#[0-9]*)?|'
