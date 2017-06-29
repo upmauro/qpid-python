@@ -18,7 +18,8 @@
 #
 
 from __future__ import absolute_import
-import compat, inspect, time
+import qpid.compat 
+import inspect, time
 
 def synchronized(meth):
   args, vargs, kwargs, defs = inspect.getargspec(meth)
